@@ -1,7 +1,9 @@
 class Channels:
     def __init__(self, bot):
         self.bot = bot
-        self.bot.channels = {}
+
+        if not hasattr(self.bot, 'channels'):
+            self.bot.channels = {}
 
     def handle(self, sender, command, rest):
         if command == 'MODE':
