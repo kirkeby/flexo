@@ -20,6 +20,8 @@ class BeatMe:
 
             if who == self.bot.nick:
                 self.bot.send('KICK %s %s :Spejl!' % (where, beater))
+            elif ',' in who:
+                self.bot.send('KICK %s %s :Pfft' % (where, beater))
             else:
                 self.bot.send('KICK %s %s :%s' % (where, who, why))
 
