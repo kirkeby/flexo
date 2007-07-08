@@ -14,6 +14,9 @@ class Larter:
             return
 
         if what == ':!lart':
+            if who == self.bot.nick:
+                who = larter
+
             larts = open('larts').readlines()
             lart = random.choice(larts).strip() % who
 
