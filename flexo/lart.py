@@ -7,7 +7,7 @@ class Larter:
         if not command == 'PRIVMSG':
             return
 
-        larter = sender.split('!', 1)[0]
+        larter = sender.split('!', 1)[0][1:]
         try:
             where, what, who = rest.split(' ', 2)
         except:
@@ -30,6 +30,8 @@ class Larter:
                               % (where, larter))
             else:
                 open('larts', 'a').write(who + '\n')
+                self.bot.send('PRIVMSG %s :%s, Har det!'
+                              % (where, larter))
             return True
 
 plugin = Larter
