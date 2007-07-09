@@ -27,15 +27,6 @@ class Remote:
 
         elif cmd == ':load':
             try:
-                self.bot.plugins.append(self.load(rest))
-            except:
-                self.bot.send('PRIVMSG kirkeby :Failed.')
-                raise
-            self.bot.send('PRIVMSG kirkeby :Loaded.')
-            return True
-        
-        elif cmd == ':reload':
-            try:
                 replacement = self.load(rest)
             except:
                 self.bot.send('PRIVMSG kirkeby :Failed.')
@@ -48,8 +39,14 @@ class Remote:
                     self.bot.send('PRIVMSG kirkeby :Reloaded.')
                     break
             else:
-                self.bot.send('PRIVMSG kirkeby :Not found.')
+                self.bot.plugins.append(replacement)
+                self.bot.send('PRIVMSG kirkeby :Loaded.')
 
+            return True
+        
+        elif cmd == ':join':
+            self.bot.send('JOIN ' + rest)
+            self.bot.send('PRIVMSG kirkeby :Joined.')
             return True
 
     def load(self, name):

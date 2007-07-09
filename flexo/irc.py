@@ -9,6 +9,7 @@ class Bot:
         self.server = None
         self.address = address
         self.nick = 'flexo'
+
         self.plugins = [Ponger(self), Remote(self)]
 
     def connect(self):

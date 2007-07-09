@@ -10,38 +10,39 @@ class Factoid:
         if not command == 'PRIVMSG':
             return
 
-        sender = sender.split('!', 1)[0][1:]
-
         try:
             where, what = rest.split(' ', 1)
         except:
             return
 
         if what.startswith(':!?'):
-            facts = factoids.get(what[3:].strip(), None)
+            what = what[3:].strip()
+            facts = factoids.get(what, None)
             if facts is None:
-                self.bot.send('PRIVMSG %s :%s, Huh?!' % (where, sender))
+                self.bot.core.reply(sender, where, 'Huh?!')
             else:
                 text = random.choice(facts)
                 if text.startswith('<reply> '):
                     self.bot.send('PRIVMSG %s :%s' % (where, text[8:]))
                 else:
-                    self.bot.send('PRIVMSG %s :Jeg mener helt bestemt at %s er %s' % (where, what, text))
+                    txt = 'Jeg mener helt bestemt at %s er %s' % (what, text)
+                    self.bot.core.reply(sender, where, txt)
             return True
 
         elif what.startswith(':!!'):
             if not ' is ' in what:
-                self.bot.send('PRIVMSG %s :%s, "!!dims is noget om dims" FAT DET!' % (where, sender))
+                txt = '"!!dims is noget om dims" <- FAT DET!'
+                self.bot.core.reply(sender, where, txt)
                 return True
 
             thing, text = what.split(' is ')
             thing = thing[3:]
             if thing in factoids:
-                text.append(factoids[thing])
+                factoids[thing].append(text)
             else:
                 factoids[thing] = [text]
             pickle.dump(factoids, open('factoids', 'w'))
-            self.bot.send('PRIVMSG %s :%s, Yeeeeees, yes.' % (where, sender))
+            self.bot.core.got_it(sender, where)
             return True
 
 plugin = Factoid

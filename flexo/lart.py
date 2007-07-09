@@ -18,7 +18,7 @@ class Larter:
                 who = larter
 
             larts = open('larts').readlines()
-            lart = random.choice(larts).strip() % who
+            lart = random.choice(larts).strip().replace('%s', who)
 
             self.bot.send('PRIVMSG %s :\x01ACTION %s\x01' % (where, lart))
 
@@ -30,8 +30,7 @@ class Larter:
                               % (where, larter))
             else:
                 open('larts', 'a').write(who + '\n')
-                self.bot.send('PRIVMSG %s :%s, Har det!'
-                              % (where, larter))
+                self.bot.core.got_it(sender, where)
             return True
 
 plugin = Larter
