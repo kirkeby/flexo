@@ -24,6 +24,8 @@ class Factoid:
                 text = random.choice(facts)
                 if text.startswith('<reply> '):
                     self.bot.send('PRIVMSG %s :%s' % (where, text[8:]))
+                elif text.startswith('<action> '):
+                    self.bot.core.action(where, text[9:])
                 else:
                     txt = 'Jeg mener helt bestemt at %s er %s' % (what, text)
                     self.bot.core.reply(sender, where, txt)
