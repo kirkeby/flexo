@@ -20,7 +20,7 @@ class Praiser:
 
         if what == (':!' + self.what):
             praises = open(self.path).readlines()
-            praise = random.choice(praises).strip() % who
+            praise = random.choice(praises).strip().replace('%s', who)
 
             self.bot.core.action(where, praise)
 
