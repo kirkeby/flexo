@@ -1,9 +1,15 @@
 class Channels:
     def __init__(self, bot):
         self.bot = bot
-
         if not hasattr(self.bot, 'channels'):
             self.bot.channels = {}
+
+        for line in open('channels'):
+            name = line.strip()
+            if not name in self.bot.channels:
+                self.bot.send('JOIN %s' % name)
+            else:
+                self.bot.send('NAMES %s' % name)
 
     def handle(self, sender, command, rest):
         if command == 'MODE':
@@ -21,10 +27,38 @@ class Channels:
 
             return True
 
+        elif command == 'PART':
+            if ':' in rest:
+                channel, who, why = rest.split(' ')
+            else:
+                channel, who = rest.split()
+            self.bot.channels[channel]['users'].remove(who)
+
+        elif command == 'JOIN':
+            channel, who = rest.split()
+            self.bot.channels[channel]['users'].append(who)
+
+        elif command == '353':
+            before, users = rest.split(':', 1)
+            print `users`
+            names = []
+            opers = []
+            for user in users.split():
+                if user[0] == '@':
+                    opers.append(user[1:])
+                if user[0] == '@' or user[0] == '+':
+                    user = user[1:]
+                names.append(user)
+            channel = before.split(' ')[2]
+            ch = self.get_channel(channel)
+            ch['users'] = names
+            ch['opers'] = opers
+
     def get_channel(self, name):
         if not name in self.bot.channels:
             self.bot.channels[name] = {
                 'opers': [],
+                'users': [],
             }
         return self.bot.channels[name]
 

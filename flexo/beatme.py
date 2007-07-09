@@ -1,3 +1,5 @@
+import random
+
 class BeatMe:
     def __init__(self, bot):
         self.bot = bot
@@ -6,25 +8,29 @@ class BeatMe:
         if not command == 'PRIVMSG':
             return
 
-        beater = sender.split('!', 1)[0]
         try:
-            where, what, who = rest.split(' ', 2)
+            pieces = rest.split(' ', 2)
+            if len(pieces) == 3:
+                where, what, why = pieces
+            else:
+                where, what = pieces
+                why = 'Why the hell not?!'
         except:
             return
 
+        if not where in self.bot.channels:
+            return
+
         if what == ':!beatme':
-            if ' ' in who:
-                who, why = who.split(' ', 1)
-            else:
-                why = 'Fordi!'
+            if not self.bot.nick in self.bot.channels[where]['opers']:
+                txt = 'Braaaaaaaaaaaaains... Eh.. Mener, mangler +o'
+                self.bot.core.reply(sender, where, txt)
+                return True
 
-            if who == self.bot.nick:
-                self.bot.send('KICK %s %s :Spejl!' % (where, beater))
-            elif ',' in who:
-                self.bot.send('KICK %s %s :Pfft' % (where, beater))
-            else:
-                self.bot.send('KICK %s %s :%s' % (where, who, why))
-
+            victims = [name for name in self.bot.channels[where]['users']
+                       if not name == self.bot.nick]
+            who = random.choice(victims)
+            self.bot.send('KICK %s %s :%s' % (where, who, why))
             return True
 
 plugin = BeatMe

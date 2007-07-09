@@ -19,36 +19,33 @@ class Remote:
             try:
                 result = eval(rest, ctx)
                 if not result is None:
-                    self.bot.send('PRIVMSG kirkeby :' + repr(result))
-            except:
-                self.bot.send('PRIVMSG kirkeby :Failed.')
+                    text = repr(result)
+                    if len(text) > 60:
+                        text = text[:60] + ' [..]'
+                    self.bot.core.reply(sender, where, text)
+            except Exception, e:
+                self.bot.core.reply(sender, where, 'Failed: %r' % e)
                 traceback.print_exc()
             return True
 
         elif cmd == ':load':
             try:
                 replacement = self.load(rest)
-            except:
-                self.bot.send('PRIVMSG kirkeby :Failed.')
-                raise
+            except Exception, e:
+                self.bot.core.reply(sender, where, 'Failed: %r' % e)
+                return True
                 
-            self.bot.plugins.append(self.load(rest))
             for i, plugin in enumerate(self.bot.plugins):
                 if plugin.__class__.__name__ == replacement.__class__.__name__:
                     self.bot.plugins[i] = replacement
-                    self.bot.send('PRIVMSG kirkeby :Reloaded.')
+                    self.bot.core.reply(sender, where, 'Reloaded.')
                     break
             else:
                 self.bot.plugins.append(replacement)
-                self.bot.send('PRIVMSG kirkeby :Loaded.')
+                self.bot.core.reply(sender, where, 'Loaded.')
 
             return True
         
-        elif cmd == ':join':
-            self.bot.send('JOIN ' + rest)
-            self.bot.send('PRIVMSG kirkeby :Joined.')
-            return True
-
     def load(self, name):
         file = 'flexo/%s.py' % name
         code = compile(open(file).read(), file, 'exec')

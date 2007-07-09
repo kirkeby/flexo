@@ -36,13 +36,27 @@ class Factoid:
                 return True
 
             thing, text = what.split(' is ')
-            thing = thing[3:]
+            thing = thing[3:].strip()
             if thing in factoids:
                 factoids[thing].append(text)
             else:
                 factoids[thing] = [text]
             pickle.dump(factoids, open('factoids', 'w'))
             self.bot.core.got_it(sender, where)
+            return True
+
+        elif what.startswith(':!listfacts '):
+            prefix = what.split(' ', 1)[1].strip()
+            facts = []
+            for key in factoids:
+                if key.startswith(prefix):
+                    facts.append(key)
+
+            if facts:
+                reply = 'Jeg ved ting om ' + ', '.join(facts)
+            else:
+                reply = 'No clue'
+            self.bot.core.reply(sender, where, reply)
             return True
 
 plugin = Factoid
