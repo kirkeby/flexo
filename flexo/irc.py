@@ -23,6 +23,8 @@ class Bot:
 
     def send(self, raw):
         print '[>] ' + raw
+        if isinstance(raw, unicode):
+            raw = raw.encode('iso-8859-1')
         self.server.write(raw + '\r\n')
         self.server.flush()
 

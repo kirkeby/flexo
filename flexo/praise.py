@@ -1,8 +1,12 @@
+# vim:encoding=utf-8
+
 import random
 
 class Praiser:
     def __init__(self, bot):
         self.bot = bot
+        self.what = 'praise'
+        self.path = 'praises'
     def handle(self, sender, command, rest):
         if not command == 'PRIVMSG':
             return
@@ -14,20 +18,21 @@ class Praiser:
         except:
             return
 
-        if what == ':!praise':
-            praises = open('praises').readlines()
+        if what == (':!' + self.what):
+            praises = open(self.path).readlines()
             praise = random.choice(praises).strip() % who
 
-            self.bot.send('PRIVMSG %s :\x01ACTION %s\x01' % (where, praise))
+            self.bot.core.action(where, praise)
 
             return True
 
-        if what == ':!newpraise':
+        if what == (':!new' + self.what):
             if not '%s' in who:
-                self.bot.send('PRIVMSG %s :%s, Halllo. Der skal være %%s i en praise!'
-                              % (where, praiseer))
+                self.bot.core.reply(where, praiseer,
+                                    u'Halllo. Der skal være %%s i en %s!'
+                                    % self.what)
             else:
-                open('praises', 'a').write(who + '\n')
+                open(self.path, 'a').write(who + '\n')
             return True
 
 plugin = Praiser
