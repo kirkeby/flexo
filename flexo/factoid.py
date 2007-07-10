@@ -3,6 +3,9 @@ import random
 
 factoids = pickle.load(open('factoids'))
 
+huh = ['Huh?!', 'I know not this %s you speak of',
+       'Aner det ikke', 'Kein ahnung']
+
 class Factoid:
     def __init__(self, bot):
         self.bot = bot
@@ -19,7 +22,8 @@ class Factoid:
             what = what[3:].strip()
             facts = factoids.get(what, None)
             if facts is None:
-                self.bot.core.reply(sender, where, 'Huh?!')
+                reply = random.choice(huh).replace('%s', what)
+                self.bot.core.reply(sender, where, reply)
             else:
                 text = random.choice(facts)
                 if text.startswith('<reply> '):
