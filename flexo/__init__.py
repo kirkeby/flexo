@@ -2,7 +2,7 @@ import thread
 from flexo import irc
 
 def main():
-    bot = irc.Bot(('localhost', 6667))
+    bot = irc.Bot(('irc.cafeen.org', 6667))
     bot.connect()
     bot.receiver()
 
