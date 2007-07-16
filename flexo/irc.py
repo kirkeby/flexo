@@ -17,6 +17,9 @@ class Bot:
 
         self.plugins = [Ponger(self), Remote(self)]
 
+        for line in open('plugins'):
+            self.plugins.append(self.plugins[1].load(line.strip()))
+
     def connect(self):
         assert not self.server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

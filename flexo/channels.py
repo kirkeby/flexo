@@ -1,9 +1,12 @@
-class Channels:
+from flexo.plugin import Plugin
+
+class Channels(Plugin):
     def __init__(self, bot):
-        self.bot = bot
+        Plugin.__init__(self, bot)
         if not hasattr(self.bot, 'channels'):
             self.bot.channels = {}
 
+    def connected(self):
         for line in open('channels'):
             name = line.strip()
             if not name in self.bot.channels:
@@ -12,7 +15,10 @@ class Channels:
                 self.bot.send('NAMES %s' % name)
 
     def handle(self, sender, command, rest):
-        if command == 'MODE':
+        if Plugin.handle(self, sender, command, rest):
+            return True
+
+        elif command == 'MODE':
             channel, mode, who = rest.split(' ', 2)
             who = who.split()
             ch = self.get_channel(channel)
@@ -35,12 +41,14 @@ class Channels:
             self.bot.channels[channel]['users'].remove(who)
 
         elif command == 'JOIN':
-            channel, who = rest.split()
-            self.bot.channels[channel]['users'].append(who)
+            try:
+                channel, who = rest.split()
+                self.bot.channels[channel]['users'].append(who)
+            except:
+                pass
 
         elif command == '353':
             before, users = rest.split(':', 1)
-            print `users`
             names = []
             opers = []
             for user in users.split():

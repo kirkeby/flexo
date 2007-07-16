@@ -1,6 +1,9 @@
+import traceback
+
 class Remote:
     def __init__(self, bot):
         self.bot = bot
+
     def handle(self, sender, command, rest):
         if not sender == ':kirkeby!kirkeby@localhost.localdomain':
             return
