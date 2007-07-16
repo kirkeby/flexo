@@ -1,14 +1,19 @@
+import time
 import socket
 import traceback
 import sys
 
 from flexo.remote import Remote
 
+reconnect_delay = 7
+
 class Bot:
     def __init__(self, address):
         self.server = None
         self.address = address
         self.nick = 'flexo'
+        self.name = 'Flexo'
+        self.usermode = '-sw'
 
         self.plugins = [Ponger(self), Remote(self)]
 
@@ -19,7 +24,14 @@ class Bot:
         self.server = s.makefile()
 
         self.send('NICK %s' % self.nick)
-        self.send('USER %s sune-laptop localhost :Flexo The Bot' % self.nick)
+        self.send('USER %s %s localhost :%s'
+                  % (self.nick, self.usermode, self.name))
+
+    def reconnect(self):
+        self.server = None
+        self.state = '-'
+        time.sleep(reconnect_delay)
+        self.connect()
 
     def send(self, raw):
         print '[>] ' + raw
@@ -33,9 +45,9 @@ class Bot:
             line = self.server.readline()
             if line == '':
                 print '[E] Lost connection'
-                self.server = None
-                self.state = '-'
-                return
+                self.reconnect()
+                continue
+
             line = line.strip()
 
             try:
