@@ -6,7 +6,7 @@ class Channels(Plugin):
         if not hasattr(self.bot, 'channels'):
             self.bot.channels = {}
 
-    def connected(self):
+    def on_connected(self):
         for line in open('channels'):
             name = line.strip()
             if not name in self.bot.channels:
