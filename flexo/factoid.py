@@ -1,8 +1,10 @@
+import re
 import pickle
 import random
 
 factoids = pickle.load(open('factoids'))
 
+define_re = re.compile(r'^:!!\s*(.*)\s+(is|er)\s+(.*)$', re.I)
 huh = ['Huh?!', 'I know not this %s you speak of',
        'Aner det ikke', 'Kein ahnung']
 
@@ -36,13 +38,13 @@ class Factoid:
             return True
 
         elif what.startswith(':!!'):
-            if not ' is ' in what:
+            m = define_re.match(what)
+            if not m:
                 txt = '"!!dims is noget om dims" <- FAT DET!'
                 self.bot.core.reply(sender, where, txt)
                 return True
 
-            thing, text = what.split(' is ')
-            thing = thing[3:].strip()
+            thing, how, text = m.groups()
             if thing in factoids:
                 factoids[thing].append(text)
             else:
