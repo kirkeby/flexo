@@ -1,10 +1,12 @@
 import thread
 from flexo import irc
 
-def main():
-    bot = irc.Bot(('irc.cafeen.org', 6667))
+def main(host='localhost'):
+    bot = irc.Bot((host, 6667))
     bot.connect()
     bot.receiver()
 
 if __name__ == '__main__':
-    main()
+    import sys
+    args = sys.argv[1:]
+    main(*args)
