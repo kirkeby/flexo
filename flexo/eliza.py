@@ -1,21 +1,14 @@
+from flexo.plugin import Plugin
 from flexo import _eliza
 import re
 
-class Eliza:
+class Eliza(Plugin):
     def __init__(self, bot):
-        self.bot = bot
+        Plugin.__init__(self, bot)
         self.therapist = _eliza.eliza()
         self.prefix = re.compile('%s[,:] ' % self.bot.nick, re.I)
 
-    def handle(self, sender, command, rest):
-        if not command == 'PRIVMSG':
-            return
-
-        try:
-            where, what = rest.split(' ', 1)
-            what = what[1:]
-        except:
-            return
+    def on_public_msg(self, sender, channel, what):
         m = self.prefix.match(what)
         if not m:
             return
