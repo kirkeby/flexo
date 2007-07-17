@@ -3,8 +3,12 @@ from flexo.plugin import Plugin
 class Channels(Plugin):
     def __init__(self, bot):
         Plugin.__init__(self, bot)
+
         if not hasattr(self.bot, 'channels'):
             self.bot.channels = {}
+
+        if self.bot.server:
+            self.on_connected()
 
     def on_connected(self):
         for line in open('channels'):
@@ -31,21 +35,16 @@ class Channels(Plugin):
                 for someone in who:
                     ch['opers'].append(someone)
 
-            return True
-
-        elif command == 'PART':
-            if ':' in rest:
-                channel, who, why = rest.split(' ')
-            else:
-                channel, who = rest.split()
-            self.bot.channels[channel]['users'].remove(who)
-
         elif command == 'JOIN':
-            try:
-                channel, who = rest.split()
-                self.bot.channels[channel]['users'].append(who)
-            except:
-                pass
+            ch = self.get_channel(rest[1:])
+            who = sender.split('!')[0][1:]
+            ch['users'].append(who)
+        elif command == 'PART':
+            ch = self.get_channel(rest[1:])
+            who = sender.split('!')[0][1:]
+            ch['users'].remove(who)
+            if who in ch['opers']:
+                ch['opers'].remove(who)
 
         elif command == '353':
             before, users = rest.split(':', 1)
