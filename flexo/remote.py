@@ -1,5 +1,6 @@
 from flexo.plugin import Plugin
 import traceback
+import sys
 
 class Remote(Plugin):
     def on_private_msg(self, sender, says):
@@ -46,12 +47,24 @@ class Remote(Plugin):
                 self.bot.core.privmsg(sender, 'Loaded.')
 
             return True
-        
+
     def load(self, name):
         file = 'flexo/%s.py' % name
         code = compile(open(file).read(), file, 'exec')
-        ctx = {}
-        module = eval(code, ctx, ctx)
+        
+        def importer(name, globals=None, locals=None, fromlist=None):
+            if name.startswith('flexo.') and name in sys.modules:
+                del sys.modules[name]
+            return orig_import(name, globals, locals, fromlist)
+        orig_import = __builtins__['__import__']
+        __builtins__['__import__'] = importer
+            
+        try:
+            ctx = { }
+            module = eval(code, ctx, ctx)
+        finally:
+            __builtins__['__import__'] = orig_import
+    
         klass = ctx['plugin']
         plugin = klass(self.bot)
         return plugin
