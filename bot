@@ -1,0 +1,2 @@
+#!/bin/sh
+exec env PYTHONPATH=. python flexo/__init__.py
