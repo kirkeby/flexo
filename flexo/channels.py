@@ -6,6 +6,9 @@ class Channels(Plugin):
         if not hasattr(self.bot, 'channels'):
             self.bot.channels = {}
 
+        if self.bot.server:
+            self.on_connected()
+
     def on_connected(self):
         for line in open('channels'):
             name = line.strip()
@@ -31,21 +34,16 @@ class Channels(Plugin):
                 for someone in who:
                     ch['opers'].append(someone)
 
-            return True
-
-        elif command == 'PART':
-            if ':' in rest:
-                channel, who, why = rest.split(' ')
-            else:
-                channel, who = rest.split()
-            self.bot.channels[channel]['users'].remove(who)
-
         elif command == 'JOIN':
-            try:
-                channel, who = rest.split()
-                self.bot.channels[channel]['users'].append(who)
-            except:
-                pass
+            channel = rest[1:]
+            who = sender.split('!')[0][1:]
+            self.bot.channels[channel]['users'].append(who)
+        elif command == 'PART':
+            channel = rest[1:]
+            who = sender.split('!')[0][1:]
+            self.bot.channels[channel]['users'].remove(who)
+            if who in self.bot.channels[channel]['opers']:
+                self.bot.channels[channel]['opers'].remove(who)
 
         elif command == '353':
             before, users = rest.split(':', 1)
