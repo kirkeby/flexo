@@ -35,6 +35,7 @@ class Remote(Plugin):
                 replacement = self.load(rest)
             except Exception, e:
                 self.bot.core.privmsg(sender, 'Failed: %r' % e)
+                traceback.print_exc()
                 return True
                 
             for i, plugin in enumerate(self.bot.plugins):

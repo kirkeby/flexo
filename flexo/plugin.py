@@ -16,8 +16,18 @@ class Plugin:
 
     def on_connected(self):
         pass
+
     def on_private_msg(self, sender, says):
-        pass
+        if not says.startswith('!'):
+            return
+
+        pieces = says.split(None, 1)
+        if len(pieces) == 1:
+            pieces.append('')
+
+        cmd = pieces[0][1:]
+        return self.on_private_cmd(sender, cmd, pieces[1])
+
     def on_public_msg(self, sender, where, says):
         if not says.startswith('!'):
             return
@@ -32,5 +42,5 @@ class Plugin:
         handler = getattr(self, 'on_cmd_' + cmd, None)
         if not handler:
             return
-        handler(sender, where, pieces[1])
+        handler(sender, where, rest)
         return True
