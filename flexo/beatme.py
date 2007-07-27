@@ -6,7 +6,11 @@ from flexo.prelude import is_it_friday
 import random
 
 class BeatMe(Plugin):
-    def on_cmd_beatme(self, sender, channel, why):
+    def on_cmd_beatme(self, context, why):
+        if not isinstance(context, tuple):
+            return
+        sender, channel = context
+        
         if not self.bot.nick in self.bot.channels[channel]['opers']:
             txt = 'Braaaaaaaaaaaaains... Eh.. Mener, mangler +o'
             self.bot.core.reply(sender, channel, txt)

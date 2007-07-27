@@ -14,4 +14,12 @@ class GreetUser(Plugin):
         else:
             self.bot.send('PRIVMSG %s :%s' % (channel, greet))
 
+    def on_cmd_newgreet(self, context, rest):
+        if not ' ' in rest:
+            self.reply(context, 'Syntaksen er: !newgreet <nick> <besked>')
+            return
+
+        open('greetings', 'a').write(rest + '\n')
+        self.reply(context, "'tis done.")
+
 plugin = GreetUser

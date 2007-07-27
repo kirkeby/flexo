@@ -30,7 +30,21 @@ class Plugin:
             pieces.append('')
 
         cmd = pieces[0][1:]
-        return self.on_private_cmd(sender, cmd, pieces[1])
+        
+        if pieces[1].startswith('#'):
+            pieces = pieces[1].split(None, 1)
+            if len(pieces) == 1:
+                pieces.append('')
+
+            if not pieces[0] in self.bot.channels:
+                text = 'Den kanal er jeg ikke med i.'
+                self.bot.core.privmsg(sender, text)
+                return
+                
+            return self.on_public_cmd(sender, pieces[0], cmd, pieces[1])
+
+        else:
+            return self.on_private_cmd(sender, cmd, pieces[1])
 
     def on_public_msg(self, sender, where, says):
         if not says.startswith('!'):
@@ -42,12 +56,31 @@ class Plugin:
 
         cmd = pieces[0][1:]
         return self.on_public_cmd(sender, where, cmd, pieces[1])
-    def on_public_cmd(self, sender, where, cmd, rest):
-        handler = getattr(self, 'on_cmd_' + cmd, None)
-        if not handler:
-            return
-        handler(sender, where, rest)
-        return True
 
     def on_join(self, channel, nick):
         pass
+
+    def on_public_cmd(self, sender, where, cmd, rest):
+        return self.on_cmd((sender, where), cmd, rest)
+    def on_private_cmd(self, sender, cmd, rest):
+        return self.on_cmd(sender, cmd, rest)
+    def on_cmd(self, context, cmd, rest):
+        handler = getattr(self, 'on_cmd_' + cmd, None)
+        if not handler:
+            return
+        handler(context, rest)
+        return True
+
+    # FIXME - skal afprøves offline!
+    #def is_oper(self, sender):
+    #    return sender in [line.strip() for line in open('opers')]
+    def get_nick(self, sender):
+        return sender.split('!', 1)[0][1:]
+    def reply(self, context, what):
+        if isinstance(context, tuple):
+            sender, channel = context
+            nick = self.get_nick(sender)
+            self.bot.send('PRIVMSG %s :%s, %s' % (channel, nick, what))
+        else:
+            nick = self.get_nick(sender)
+            self.bot.send('PRIVMSG %s :%s' % (nick, what))

@@ -14,8 +14,6 @@ class Core(Plugin):
 
     def is_oper(self, sender):
         return sender in opers
-    def get_nick(self, sender):
-        return sender.split('!', 1)[0][1:]
 
     def reply(self, sender, where, txt):
         who = self.get_nick(sender)
