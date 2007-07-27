@@ -13,6 +13,10 @@ class Plugin:
                 return self.on_private_msg(sender, says)
             else:
                 return self.on_public_msg(sender, where, says)
+        elif command == 'JOIN':
+            channel = rest[1:]
+            nick = sender.split('!')[0][1:]
+            self.on_join(channel, nick)
 
     def on_connected(self):
         pass
@@ -44,3 +48,6 @@ class Plugin:
             return
         handler(sender, where, rest)
         return True
+
+    def on_join(self, channel, nick):
+        pass

@@ -1,16 +1,5 @@
 from flexo.plugin import Plugin
-import random
-
-def random_element(iter):
-    '''Retrieve a random item from an iterable object of unknown length,
-    looping through it just once.'''
-
-    it = None
-    for i, e in enumerate(iter):
-        if random.uniform(0, i) < 1:
-            it = e
-
-    return it
+from flexo.prelude import random_element
 
 class Excuse(Plugin):
     def on_cmd_excuse(self, sender, channel, why):

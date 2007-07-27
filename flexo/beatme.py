@@ -1,11 +1,9 @@
 # vim:encoding=utf-8:
 
 from flexo.plugin import Plugin
-import random
-import time
+from flexo.prelude import is_it_friday
 
-def is_friday():
-    return time.localtime().tm_wday == 4
+import random
 
 class BeatMe(Plugin):
     def on_cmd_beatme(self, sender, channel, why):
@@ -14,7 +12,7 @@ class BeatMe(Plugin):
             self.bot.core.reply(sender, channel, txt)
             return
 
-        if not is_friday():
+        if not is_it_friday():
             who = self.bot.core.get_nick(sender)
             self.bot.send('KICK %s %s :*Kun* på en fredag!' % (channel, who))
             return
