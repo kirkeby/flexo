@@ -44,7 +44,11 @@ class Praiser(Plugin):
         if cmd == self.what:
             praises = open(self.path).readlines()
 
-            who = replace_pronouns(rest, praiser)
+            if rest == self.bot.nick:
+                who = 'sig selv'
+            else:
+                who = replace_pronouns(rest, praiser)
+
             praise = random.choice(praises).strip().replace('%s', who)
             self.bot.core.action(where, praise)
 
