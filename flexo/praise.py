@@ -45,10 +45,10 @@ class Praiser(Plugin):
             praises = open(self.path).readlines()
 
             if rest == self.bot.nick:
-                who = 'sig selv'
-            else:
-                who = replace_pronouns(rest, praiser)
+                self.on_self_praise(where, praiser)
+                return True
 
+            who = replace_pronouns(rest, praiser)
             praise = random.choice(praises).strip().replace('%s', who)
             self.bot.core.action(where, praise)
 
@@ -63,5 +63,8 @@ class Praiser(Plugin):
                 open(self.path, 'a').write(rest + '\n')
                 self.bot.core.got_it(sender, where)
             return True
+
+    def on_self_praise(self, where, praiser):
+        self.bot.core.action(where, u'klapper sig selv på hovedet')
 
 plugin = Praiser
