@@ -14,3 +14,13 @@ def random_element(iter):
             it = e
 
     return it
+
+def get_nick_channel(context):
+    if isinstance(context, tuple):
+        return get_nick(context[0]), context[1]
+    else:
+        return get_nick(context), None
+def get_nick(context):
+    if isinstance(context, tuple):
+        context = context[0]
+    return context.split('!', 1)[0][1:]

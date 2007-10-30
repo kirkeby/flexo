@@ -1,3 +1,5 @@
+from flexo.prelude import *
+
 class Plugin:
     def __init__(self, bot):
         self.bot = bot
@@ -74,13 +76,9 @@ class Plugin:
     # FIXME - skal afprøves offline!
     #def is_oper(self, sender):
     #    return sender in [line.strip() for line in open('opers')]
-    def get_nick(self, sender):
-        return sender.split('!', 1)[0][1:]
     def reply(self, context, what):
-        if isinstance(context, tuple):
-            sender, channel = context
-            nick = self.get_nick(sender)
+        nick, channel = get_nick_channel(context)
+        if channel:
             self.bot.send('PRIVMSG %s :%s, %s' % (channel, nick, what))
         else:
-            nick = self.get_nick(sender)
             self.bot.send('PRIVMSG %s :%s' % (nick, what))

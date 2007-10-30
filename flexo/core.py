@@ -1,4 +1,5 @@
 from flexo.plugin import Plugin
+from flexo.prelude import get_nick
 import random
 
 got_its = ['Yeeees, yes', 'Har det!', 'Oki', 'You speak wisely, sir']
@@ -16,7 +17,7 @@ class Core(Plugin):
         return sender in opers
 
     def reply(self, sender, where, txt):
-        who = self.get_nick(sender)
+        who = get_nick(sender)
         if where == self.bot.nick:
             self.bot.send('PRIVMSG %s :%s' % (who, txt))
         else:

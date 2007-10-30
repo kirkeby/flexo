@@ -1,6 +1,7 @@
 # vim:encoding=utf-8
 
 from flexo.plugin import Plugin
+from flexo.prelude import get_nick
 import re
 import random
 
@@ -40,7 +41,7 @@ class Praiser(Plugin):
         self.path = 'praises'
 
     def on_public_cmd(self, sender, where, cmd, rest):
-        praiser = self.bot.core.get_nick(sender)
+        praiser = get_nick(sender)
         if cmd == self.what:
             praises = open(self.path).readlines()
 

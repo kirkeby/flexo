@@ -2,6 +2,7 @@
 
 from flexo.plugin import Plugin
 from flexo.prelude import is_it_friday
+from flexo.prelude import get_nick
 
 import random
 
@@ -17,7 +18,7 @@ class BeatMe(Plugin):
             return
 
         if not is_it_friday():
-            who = self.bot.core.get_nick(sender)
+            who = get_nick(sender)
             self.bot.send('KICK %s %s :*Kun* på en fredag!' % (channel, who))
             return
 
