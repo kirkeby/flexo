@@ -23,7 +23,11 @@ class Channels(Plugin):
             return True
 
         elif command == 'MODE':
-            channel, mode, who = rest.split(' ', 2)
+            pieces = rest.split(' ', 2)
+            if not len(pieces) == 3:
+                return
+
+            channel, mode, who = pieces
             who = who.split()
             ch = self.get_channel(channel)
 
