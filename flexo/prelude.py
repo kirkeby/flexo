@@ -1,8 +1,8 @@
-import time
-import random
+from time import localtime
+from random import uniform
 
 def is_it_friday():
-    return time.localtime().tm_wday == 4
+    return localtime().tm_wday == 4
 
 def random_element(iter):
     '''Retrieve a random item from an iterable object of unknown length,
@@ -10,7 +10,7 @@ def random_element(iter):
 
     it = None
     for i, e in enumerate(iter):
-        if random.uniform(0, i) < 1:
+        if uniform(0, i) < 1:
             it = e
 
     return it
