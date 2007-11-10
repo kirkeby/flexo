@@ -3,21 +3,17 @@ from flexo.plugin import Plugin
 from flexo.prelude import get_nick_channel
 
 class Buy(Plugin):
-    def on_cmd_buy(self, context, rest):
-        if not isinstance(context, tuple):
-            return
-
-        buyer, channel = get_nick_channel(context)
-        if not channel:
+    def on_cmd_buy(self, message, rest):
+        if not message.channel:
             return
 
         if ' ' in rest:
             who, what = rest.split(' ', 1)
-            action = 'giver %s %s fra %s' % (who, what, buyer)
-            self.bot.core.action(channel, action)
+            action = 'giver %s %s fra %s' % (who, what, message.nick)
+            message.reply_action(action)
         else:
             action = 'installerer et clue-level i %s' % buyer
-            self.bot.core.action(channel, action)
+            message.reply_action(action)
 
         return True
 

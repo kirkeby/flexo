@@ -8,9 +8,10 @@ class Larter(Praiser):
         self.what = 'lart'
         self.path = 'larts'
 
-    def on_self_praise(self, where, praiser):
-        self.bot.core.action(where, u'losser %s så hårdt i bollerne at han ryger ud af %s' % (praiser, where))
+    def on_self_praise(self, message):
+        message.reply_action(u'losser %s så hårdt i bollerne at '
+                             u'han ryger ud af %s' % (praiser, where))
         self.bot.send(u'KICK %s %s :Så kan du måske lære det!'
-                      % (where, praiser))
+                      % (message.channel.name, message.nick))
 
 plugin = Larter

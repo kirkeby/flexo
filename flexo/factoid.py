@@ -3,6 +3,7 @@ import re
 import random
 
 from flexo.plugin import Plugin
+from flexo.prelude import got_its
 
 define_format = r'^!!\s*(.*?)\s+(er|har)\s+(.*)$'
 define_re = re.compile(define_format, re.I)
@@ -10,54 +11,62 @@ huh = ['Huh?!', 'I know not this %s you speak of',
        'Aner det ikke', 'Kein ahnung']
 
 class Factoid(Plugin):
-    def on_public_msg(self, sender, where, what):
+    def on_public_msg(self, message):
+        what = message.tail
         if what.startswith('!?'):
             what = what[2:].strip()
-            self.on_lookup(sender, where, what)
+            self.on_lookup(message, what)
             return True
 
         elif what.startswith('!!'):
-            self.on_define(sender, where, what)
+            self.on_define(message, what)
             return True
 
         elif what.startswith('!listfacts '):
             prefix = what.split(' ', 1)[1].strip()
-            self.on_list(sender, where, prefix.lower())
+            self.on_list(message, prefix.lower())
             return True
 
-    def on_lookup(self, sender, where, what):
-        all = [ l.strip().split('\t', 2) for l in open('factoids') ]
+    def on_lookup(self, message, what):
+        all = [ l.strip().decode('utf-8').split('\t', 2)
+                for l in open('factoids') ]
         facts = [ (how, fact) for key, how, fact in all
                   if key.lower() == what.lower() ]
         if not facts:
             reply = random.choice(huh).replace('%s', what)
-            self.bot.core.reply(sender, where, reply)
+            message.reply(reply)
 
         else:
             how, text = random.choice(facts)
             if text.startswith('<reply> '):
-                self.bot.send('PRIVMSG %s :%s' % (where, text[8:]))
+                if message.channel:
+                    self.bot.send('PRIVMSG %s :%s' % (message.channel.name, text[8:]))
+                elif message.nick:
+                    self.bot.send('PRIVMSG %s :%s' % (message.nick, text[8:]))
             elif text.startswith('<action> '):
-                self.bot.core.action(where, text[9:])
+                message.reply_action(text[9:])
             else:
                 txt = 'Jeg mener helt bestemt at %s %s %s' % (what, how, text)
-                self.bot.core.reply(sender, where, txt)
+                message.reply(txt)
         
-    def on_define(self, sender, where, what):
+    def on_define(self, message, what):
         m = define_re.match(what)
         if not m:
             txt = '%r <- FAT DET!' % define_format
-            self.bot.core.reply(sender, where, txt)
+            message.reply(txt)
             return True
 
         thing, how, text = m.groups()
         thing = thing.replace('\t', ' ')
-        open('factoids', 'a').write('%s\t%s\t%s\n' % (thing, how, text))
+        
+        line = u'%s\t%s\t%s\n' % (thing, how, text)
+        open('factoids', 'a').write(line.encode('utf-8'))
 
-        self.bot.core.got_it(sender, where)
+        message.reply(random.choice(got_its))
 
-    def on_list(self, sender, where, prefix):
-        all = [ l.strip().split('\t', 1) for l in open('factoids') ]
+    def on_list(self, message, prefix):
+        all = [ l.strip().decode('utf-8').split('\t', 1)
+                for l in open('factoids') ]
         facts = {}
         for key, fact in all:
             if key.lower() in facts:
@@ -69,6 +78,6 @@ class Factoid(Plugin):
             reply = 'Jeg ved ting om ' + ', '.join(facts.values())
         else:
             reply = 'No clue'
-        self.bot.core.reply(sender, where, reply)
+        message.reply(reply)
 
 plugin = Factoid

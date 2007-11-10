@@ -2,33 +2,30 @@
 
 from flexo.plugin import Plugin
 from flexo.prelude import is_it_friday
-from flexo.prelude import get_nick
 
-from random import choice
+import random
 
 class BeatMe(Plugin):
-    def on_cmd_beatme(self, context, why):
-        if not isinstance(context, tuple):
+    def on_cmd_beatme(self, message, why):
+        if not message.channel:
             return
-        sender, channel = context
         
-        if not self.bot.nick in self.bot.channels[channel]['opers']:
-            txt = 'Braaaaaaaaaaaaains... Eh.. Mener, mangler +o'
-            self.bot.core.reply(sender, channel, txt)
+        if not self.bot.nick in message.channel.opers:
+            message.reply(u'Braaaaaaaaaaaaains... Eh.. Mener, mangler +o')
             return
 
         if not is_it_friday():
-            who = get_nick(sender)
-            self.bot.send('KICK %s %s :*Kun* på en fredag!' % (channel, who))
+            self.bot.send(u'KICK %s %s :*Kun* på en fredag!'
+                          % (message.channel.name, message.nick))
             return
 
         if not why:
             why = 'Uuuuuuuuuuuht af min butik!'
 
-        victims = [name for name in self.bot.channels[channel]['users']
+        victims = [name for name in message.channel.users
                    if not name == self.bot.nick]
-        who = choice(victims)
+        who = random.choice(victims)
 
-        self.bot.send('KICK %s %s :%s' % (channel, who, why))
+        self.bot.send(u'KICK %s %s :%s' % (message.channel.name, who, why))
 
 plugin = BeatMe

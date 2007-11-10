@@ -1,77 +1,104 @@
 # -*- encoding: utf-8 -*-
+
 from flexo.plugin import Plugin
+from flexo.prelude import is_oper
 
 class Channels(Plugin):
     def __init__(self, bot):
         Plugin.__init__(self, bot)
 
-        if not hasattr(self.bot, 'channels'):
-            self.bot.channels = {}
+        self.channels = {}
+        self.bot.channels = self
 
-        if self.bot.server:
-            self.on_connected()
+    def get_state(self):
+        return [ (c.name, c.users, c.opers) for c in self.channels.values() ]
+    def set_state(self, triplets):
+        for name, users, opers in triplets:
+            self.channels[name] = Channel(name, users, opers)
 
     def on_connected(self):
         for line in open('channels'):
             name = line.strip()
-            if not name in self.bot.channels:
-                self.bot.send('JOIN %s' % name)
-            else:
-                self.bot.send('NAMES %s' % name)
+            self.channels[name] = Channel(name, [], []) 
+            self.bot.send('JOIN %s' % name)
 
-    def handle(self, sender, command, rest):
-        if Plugin.handle(self, sender, command, rest):
+    def handle(self, message):
+        if Plugin.handle(self, message):
             return True
 
-        elif command == 'MODE':
-            pieces = rest.split(' ', 2)
-            if not len(pieces) == 3:
-                return
-
-            channel, mode, who = pieces
+        if message.channel and message.command == 'MODE':
+            name, mode, who = message.rest
             who = who.split()
-            ch = self.get_channel(channel)
 
             if mode == '-o':
                 for someone in who:
-                    if someone in ch['opers']:
-                        ch['opers'].remove(someone)
+                    if someone in channel.opers:
+                        message.channel.opers.remove(someone)
             elif mode == '+o':
                 for someone in who:
-                    ch['opers'].append(someone)
+                    message.channel.opers.append(someone)
 
-        elif command == 'JOIN':
-            ch = self.get_channel(rest[1:])
-            who = sender.split('!')[0][1:]
-            ch['users'].append(who)
-        elif command == 'PART':
-            ch = self.get_channel(rest[1:])
-            who = sender.split('!')[0][1:]
-            ch['users'].remove(who)
-            if who in ch['opers']:
-                ch['opers'].remove(who)
+        elif message.command == '353':
+            name = message.rest[2]
+            channel = self.get(name)
 
-        elif command == '353':
-            before, users = rest.split(':', 1)
-            names = []
-            opers = []
-            for user in users.split():
+            for user in message.tail.split():
                 if user[0] == '@':
-                    opers.append(user[1:])
-                if user[0] == '@' or user[0] == '+':
                     user = user[1:]
-                names.append(user)
-            channel = before.split(' ')[2]
-            ch = self.get_channel(channel)
-            ch['users'] = names
-            ch['opers'] = opers
+                    if not user in channel.opers:
+                        channel.opers.append(user)
+                if user[0] == '+':
+                    user = user[1:]
+                if not user in channel.users:
+                    channel.users.append(user)
 
-    def get_channel(self, name):
-        if not name in self.bot.channels:
-            self.bot.channels[name] = {
-                'opers': [],
-                'users': [],
-            }
-        return self.bot.channels[name]
+    def on_join(self, name, nick):
+        channel = self.get(name)
+        if channel:
+            channel.users.append(nick)
+
+    def on_part(self, name, nick, reason):
+        channel = self.get(name)
+        if channel and nick == self.bot.nick:
+            del self.channels[name]
+
+        elif channel:
+            channel.users.remove(nick)
+            if nick in channel.opers:
+                channel.opers.remove(nick)
+
+    def get(self, name):
+        return self.channels.get(name)
+
+    def on_cmd_join(self, message, name):
+        if not is_oper(message.sender):
+            return
+
+        if name in self.channels:
+            message.reply('Der er jeg allerede!')
+            return
+
+        self.channels[name] = Channel(name, [], []) 
+        self.bot.send('JOIN ' + name)
+        message.reply('Oki.')
+
+    def on_cmd_part(self, message, name):
+        if not is_oper(message.sender):
+            return
+
+        if not name and message.channel:
+            name = message.channel.name
+        if not name in self.channels:
+            message.reply('Der er jeg ikke!')
+            return
+
+        message.reply('Jeg fordufter.')
+        self.bot.send('PART %s :%s fik mig til det!' % (name, message.nick))
+
+class Channel:
+    def __init__(self, name, users, opers):
+        self.name = name
+        self.users = users
+        self.opers = opers
 
 plugin = Channels

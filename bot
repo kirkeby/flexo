@@ -1,2 +1,28 @@
-#!/bin/sh
-exec env PYTHONPATH=. python flexo/__init__.py "$@"
+#!/usr/bin/env python
+
+import pdb
+from flexo import irc
+
+def main(host='localhost', port=6667, debug=False):
+    bot = irc.Bot((host, port))
+    bot.initialize()
+    bot.connect()
+    bot.receiver()
+
+if __name__ == '__main__':
+    import sys, getopt
+
+    kwargs = {}
+    short_opts = 'dh:p:'
+
+    opts, args = getopt.getopt(sys.argv[1:], short_opts)
+    for opt, val in opts:
+        if opt == '-d':
+            kwargs['debug'] = True
+
+        elif opt == '-h':
+            kwargs['hostname'] = val
+        elif opt == '-p':
+            kwargs['port'] = int(val)
+
+    main(**kwargs)

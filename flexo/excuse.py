@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
 from flexo.plugin import Plugin
-from flexo.prelude import random_element
+from flexo.prelude import random_line
 
 class Excuse(Plugin):
-    def on_cmd_excuse(self, sender, channel, why):
-        self.bot.core.reply(sender, channel, random_element(open('excuses')))
+    def on_cmd_excuse(self, message, why):
+        message.reply(random_line('excuses'))
 
 plugin = Excuse

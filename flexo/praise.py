@@ -1,9 +1,11 @@
 # vim:encoding=utf-8
 
-from flexo.plugin import Plugin
-from flexo.prelude import get_nick
 import re
 import random
+
+from flexo.plugin import Plugin
+from flexo.prelude import got_its
+from flexo.prelude import random_line
 
 my_pronouns_re = re.compile(r'\b(mig|min|mine|mit)\b', re.I)
 specials = {
@@ -40,32 +42,28 @@ class Praiser(Plugin):
         self.what = 'praise'
         self.path = 'praises'
 
-    def on_public_cmd(self, sender, where, cmd, rest):
-        praiser = get_nick(sender)
+    def on_public_cmd(self, message, cmd, rest):
+        praiser = message.nick
         if cmd == self.what:
-            praises = open(self.path).readlines()
-
             if rest == self.bot.nick:
                 self.on_self_praise(where, praiser)
                 return True
 
             who = replace_pronouns(rest, praiser)
-            praise = random.choice(praises).strip().replace('%s', who)
-            self.bot.core.action(where, praise)
+            praise = random_line(self.path).replace('%s', who)
+            message.reply_action(praise)
 
             return True
 
         elif cmd == 'new' + self.what:
             if not '%s' in rest:
-                self.bot.core.reply(sender, where,
-                                    u'Halllo. Der skal være %%s i en %s!'
-                                    % self.what)
+                message.reply(u'Halllo. Der skal være %%s i en %s!' % self.what)
             else:
-                open(self.path, 'a').write(rest + '\n')
-                self.bot.core.got_it(sender, where)
+                open(self.path, 'a').write(rest.encode('utf-8') + '\n')
+                message.reply(random.choice(got_its))
             return True
 
-    def on_self_praise(self, where, praiser):
-        self.bot.core.action(where, u'klapper sig selv på hovedet')
+    def on_self_praise(self, message):
+        message.reply_action(where, u'klapper sig selv på hovedet')
 
 plugin = Praiser
