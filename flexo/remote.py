@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 from flexo.plugin import Plugin
 import traceback
 import sys

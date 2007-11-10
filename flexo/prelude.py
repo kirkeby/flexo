@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 from time import localtime
 from random import uniform
 

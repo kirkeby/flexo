@@ -1,5 +1,4 @@
-import thread
-from flexo import irc
+# -*- encoding: utf-8 -*-
 
 def main(host='localhost'):
     bot = irc.Bot((host, 6667))

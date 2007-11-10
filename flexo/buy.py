@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 from flexo.plugin import Plugin
 from flexo.prelude import get_nick_channel
 

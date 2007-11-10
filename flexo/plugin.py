@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 from flexo.prelude import *
 
 class Plugin:
