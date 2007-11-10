@@ -4,7 +4,7 @@ from flexo.plugin import Plugin
 from flexo.prelude import is_it_friday
 from flexo.prelude import get_nick
 
-import random
+from random import choice
 
 class BeatMe(Plugin):
     def on_cmd_beatme(self, context, why):
@@ -27,7 +27,7 @@ class BeatMe(Plugin):
 
         victims = [name for name in self.bot.channels[channel]['users']
                    if not name == self.bot.nick]
-        who = random.choice(victims)
+        who = choice(victims)
 
         self.bot.send('KICK %s %s :%s' % (channel, who, why))
 
