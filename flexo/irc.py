@@ -37,9 +37,12 @@ class Bot:
         self.connect()
 
     def send(self, raw):
-        print '[>] ' + raw
         if isinstance(raw, unicode):
+            self.log('> ' + raw.encode('utf-8'))
             raw = raw.encode('iso-8859-1')
+        else:
+            self.log('> ' + raw)
+
         self.server.write(raw + '\r\n')
         self.server.flush()
 
@@ -47,11 +50,12 @@ class Bot:
         while True:
             line = self.server.readline()
             if line == '':
-                print '[E] Lost connection'
+                self.log('Lost connection')
                 self.reconnect()
                 continue
 
             line = line.strip()
+            self.log('< ' + line)
 
             try:
                 self.handler(line)
@@ -71,8 +75,9 @@ class Bot:
                     break
             except:
                 traceback.print_exc()
-        else:
-            print '[U] ' + line
+
+    def log(self, text):
+        print '[%s] %s' % (time.ctime(), text)
 
 class Ponger:
     def __init__(self, bot):
