@@ -1,13 +1,26 @@
 #!/usr/bin/env python
 
-import pdb
+from threading import Thread
 from flexo import irc
+from code import interact
 
-def main(hostname='localhost', port=6667, debug=False):
-    bot = irc.Bot((hostname, port))
+def run_bot(bot):
     bot.initialize()
     bot.connect()
     bot.receiver()
+
+def run_console(bot):
+    interact(local={ 'bot': bot })
+
+def main(hostname='localhost', port=6667, debug=False):
+    bot = irc.Bot((hostname, port))
+    bot_thread = Thread(target=run_bot, name='Bot', args=(bot,))
+    bot_thread.start()
+
+    console_thread = Thread(target=run_console, name='Console', args=(bot,))
+    console_thread.start()
+
+    bot_thread.join()
 
 if __name__ == '__main__':
     import sys, getopt
