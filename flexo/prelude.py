@@ -12,6 +12,8 @@ def is_oper(sender):
     for line in open('opers'):
         if line.strip() == sender:
             return True
+def is_bot(nick):
+    return nick == 'Bender'
 
 def random_line(path):
     '''Retrieve a random line from a file, decoded as UTF-8 and stripped.'''

@@ -2,6 +2,7 @@
 
 from flexo.plugin import Plugin
 from flexo.prelude import is_it_friday
+from flexo.prelude import is_bot
 
 import random
 
@@ -23,7 +24,9 @@ class BeatMe(Plugin):
             why = 'Uuuuuuuuuuuht af min butik!'
 
         victims = [name for name in message.channel.users
-                   if not name == self.bot.nick]
+                   if not name == self.bot.nick and not is_bot(name)]
+        if not victims:
+            return
         who = random.choice(victims)
 
         self.bot.send(u'KICK %s %s :%s' % (message.channel.name, who, why))

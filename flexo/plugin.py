@@ -1,4 +1,7 @@
 # -*- encoding: utf-8 -*-
+
+from flexo.prelude import is_bot
+
 class Plugin:
     def __init__(self, bot):
         self.bot = bot
@@ -13,6 +16,8 @@ class Plugin:
             self.on_connected()
 
         elif message.command == u'PRIVMSG':
+            if is_bot(message.nick):
+                return True
             if message.channel and message.nick:
                 return self.on_public_msg(message)
             elif message.nick:
