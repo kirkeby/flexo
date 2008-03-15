@@ -7,6 +7,10 @@ from flexo.prelude import is_oper
 from flexo.plugin import Plugin
 
 class Remote(Plugin):
+    def __init__(self, bot):
+        Plugin.__init__(self, bot)
+        self.name = 'remote'
+
     def on_private_msg(self, message):
         if not is_oper(message.sender):
             return

@@ -4,6 +4,7 @@ import socket
 import traceback
 import sys
 import os
+
 from pickle import dumps
 from pickle import loads
 
@@ -12,7 +13,11 @@ from flexo.plugin import Plugin
 
 reconnect_delay = 67
 
-class Bot:
+class Bot(object):
+    __slots__ = ['server', 'address', 'nick', 'name', 'usermode',
+                 'encodings', 'log_encoding', 'out_encoding',
+                 'plugins', 'reason']
+
     def __init__(self, address='localhost'):
         self.server = None
         self.address = address
@@ -24,31 +29,55 @@ class Bot:
         self.log_encoding = 'utf-8'
         self.out_encoding = 'iso-8859-1'
 
-        self.remote = Remote(self)
-        self.plugins = [self.remote]
+        self.reason = None
+
+        self.plugins = []
+
+    def __getattr__(self, name):
+        for plugin in self.plugins:
+            if plugin.name == name:
+                return plugin
+        raise KeyError(name)
+
+    def run(self):
+        while True:
+            try:
+                if not self.server:
+                    self.connect()
+                self.interact()
+
+            except (socket.error, EnvironmentError):
+                traceback.print_exc()
+
+            if self.reason:
+                break
+
+            time.sleep(reconnect_delay)
+
+    def quit(self, reason):
+        self.reason = 'quit'
+        self.send(u'QUIT :' + reason)
+
+    def graceful(self):
+        self.log('Scheduling graceful code reload')
+        self.reason = 'graceful'
 
     def initialize(self):
+        self.plugins = [Remote(self)]
         for line in open('plugins'):
             self.plugins.append(self.remote.load(line.strip()))
 
-    def reinitialize(self, state):
-        for name, state in loads(state):
-            plugin = self.remote.load(name)
-            plugin.set_state(state)
-            self.plugins.append(plugin)
+    def reinitialize(self, other):
+        for key in other.__slots__:
+            setattr(self, key, getattr(other, key))
 
-        self.log('Reinitialized %d plugins' % len(self.plugins))
+        self.reason = None
 
-    def graceful(self):
-        assert self.server
-        fd = str(self.server.fileno())
-        state = dumps([(plugin.name, plugin.get_state())
-                       for plugin in self.plugins[1:]])
-        argv = [sys.executable, __file__, '--graceful', fd, state]
-        os.execv(sys.executable, argv)
+        # FIXME - reload plugins
 
     def connect(self):
         assert not self.server
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(self.address)
         self.server = s.makefile('rw')
@@ -56,12 +85,6 @@ class Bot:
         self.send(u'NICK %s' % self.nick)
         self.send(u'USER %s %s localhost :%s'
                   % (self.nick, self.usermode, self.name))
-
-    def reconnect(self):
-        self.server = None
-        self.state = '-'
-        time.sleep(reconnect_delay)
-        self.connect()
 
     def send(self, raw):
         assert isinstance(raw, unicode)
@@ -71,13 +94,14 @@ class Bot:
         self.server.write(raw + '\r\n')
         self.server.flush()
 
-    def receiver(self):
-        while True:
+    def interact(self):
+        while not self.reason:
             line = self.server.readline()
             if line == '':
-                self.log('[E] Lost connection')
-                self.reconnect()
-                continue
+                if not self.reason:
+                    self.log('[E] Lost connection')
+                self.server = None
+                break
 
             line = line.strip()
             for encoding in self.encodings:
@@ -88,7 +112,7 @@ class Bot:
                     pass
             else:
                 self.log('[E] Could not decode %r' % line)
-                return
+                continue
 
             self.log(u'< ' + line)
             try:
@@ -154,16 +178,3 @@ class Message:
         elif self.nick:
             self.bot.send(u'PRIVMSG %s :\x01ACTION %s\x01'
                           % (self.nick, what))
-
-if __name__ == '__main__':
-    if len(sys.argv) == 4 and sys.argv[1] == '--graceful':
-        s = socket.fromfd(int(sys.argv[2]), socket.AF_INET, socket.SOCK_STREAM)
-        server = socket._fileobject(s)
-
-        state = sys.argv[3]
-
-        flexo = Bot()
-        flexo.reinitialize(state)
-        flexo.server = server
-        flexo.log('[I] Gracefully restarted')
-        flexo.receiver()

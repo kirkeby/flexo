@@ -1,29 +1,57 @@
 #!/usr/bin/env python
 
+import sys
+import logging
 from threading import Thread
 from flexo import irc
 from code import interact
 
-def run_bot(bot):
-    bot.initialize()
-    bot.connect()
-    bot.receiver()
+log = logging.getLogger('bot')
 
-def run_console(bot):
-    interact(local={ 'bot': bot })
+def run_bot(context, bot_factory):
+    global irc
+
+    bot = context['bot'] = bot_factory(irc)
+    bot.initialize()
+
+    while not bot.reason:
+        bot.run()
+
+        if bot.reason == 'graceful':
+            log.info('Gracefully reloading code')
+
+            old_bot = bot
+
+            try:
+                irc = reload(irc)
+                bot = context['bot'] = bot_factory(irc)
+            except:
+                log.exception('Graceful reload of code failed')
+
+            bot.reinitialize(old_bot)
+            old_bot = None
+
+def run_console(context):
+    while True:
+        interact(local=context)
 
 def main(hostname='localhost', port=6667, debug=False):
-    bot = irc.Bot((hostname, port))
-    bot_thread = Thread(target=run_bot, name='Bot', args=(bot,))
+    def bot_factory(irc):
+        return irc.Bot((hostname, port))
+
+    context = {}
+
+    bot_thread = Thread(target=run_bot, name='Bot', args=(context, bot_factory))
     bot_thread.start()
 
-    console_thread = Thread(target=run_console, name='Console', args=(bot,))
+    console_thread = Thread(target=run_console, name='Console', args=(context,))
     console_thread.start()
 
     bot_thread.join()
+    sys.exit()
 
 if __name__ == '__main__':
-    import sys, getopt
+    import getopt
 
     kwargs = {}
     short_opts = 'dh:p:'
@@ -37,5 +65,7 @@ if __name__ == '__main__':
             kwargs['hostname'] = val
         elif opt == '-p':
             kwargs['port'] = int(val)
+
+    logging.basicConfig()
 
     main(**kwargs)

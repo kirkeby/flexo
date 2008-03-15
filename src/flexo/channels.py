@@ -6,9 +6,7 @@ from flexo.prelude import is_oper
 class Channels(Plugin):
     def __init__(self, bot):
         Plugin.__init__(self, bot)
-
         self.channels = {}
-        self.bot.channels = self
 
     def get_state(self):
         return [ (c.name, c.users, c.opers) for c in self.channels.values() ]
