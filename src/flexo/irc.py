@@ -1,9 +1,11 @@
 # -*- encoding: utf-8 -*-
+import sys
 import time
 import socket
 import traceback
 import sys
 import os
+import logging
 
 from pickle import dumps
 from pickle import loads
@@ -11,12 +13,14 @@ from pickle import loads
 from flexo.remote import Remote
 from flexo.plugin import Plugin
 
+log = logging.getLogger('flexo.irc')
+
 reconnect_delay = 67
 
 class Bot(object):
     __slots__ = ['server', 'address', 'nick', 'name', 'usermode',
-                 'encodings', 'log_encoding', 'out_encoding',
-                 'plugins', 'reason']
+                 'in_encodings', 'out_encoding', 'plugins', 'reason',
+                 'exc_info']
 
     def __init__(self, address='localhost'):
         self.server = None
@@ -25,11 +29,11 @@ class Bot(object):
         self.name = u'Flexo'
         self.usermode = u'-sw'
 
-        self.encodings = 'iso-8859-1', 'utf-8'
-        self.log_encoding = 'utf-8'
+        self.in_encodings = 'iso-8859-1', 'utf-8'
         self.out_encoding = 'iso-8859-1'
 
         self.reason = None
+        self.exc_info = None
 
         self.plugins = []
 
@@ -47,7 +51,7 @@ class Bot(object):
                 self.interact()
 
             except (socket.error, EnvironmentError):
-                traceback.print_exc()
+                log.exception('Network error')
 
             if self.reason:
                 break
@@ -59,7 +63,7 @@ class Bot(object):
         self.send(u'QUIT :' + reason)
 
     def graceful(self):
-        self.log('Scheduling graceful code reload')
+        log.info('Scheduling graceful code reload')
         self.reason = 'graceful'
 
     def initialize(self):
@@ -88,7 +92,7 @@ class Bot(object):
 
     def send(self, raw):
         assert isinstance(raw, unicode)
-        self.log(u'> ' + raw)
+        self.network_log(u'> ' + raw)
 
         raw = raw.encode(self.out_encoding)
         self.server.write(raw + '\r\n')
@@ -99,26 +103,27 @@ class Bot(object):
             line = self.server.readline()
             if line == '':
                 if not self.reason:
-                    self.log('[E] Lost connection')
+                    log.warning('[E] Lost connection')
                 self.server = None
                 break
 
             line = line.strip()
-            for encoding in self.encodings:
+            for encoding in self.in_encodings:
                 try:
                     line = line.decode(encoding)
                     break
                 except UnicodeError:
                     pass
             else:
-                self.log('[E] Could not decode %r' % line)
+                log.info('[E] Could not decode %r' % line)
                 continue
 
-            self.log(u'< ' + line)
+            self.network_log(u'< ' + line)
             try:
                 self.handler(line)
-            except:
-                traceback.print_exc()
+            except Exception:
+                self.exc_info = sys.exc_info()
+                log.exception('Exception handling %r' % line)
 
     def parse_line(self, line):
         sender, rest = line.split(u' ', 1)
@@ -144,10 +149,10 @@ class Bot(object):
             if plugin.handle(message):
                 break
 
-    def log(self, text):
-        text = text.encode('utf-8', 'ignore')
-        line = '[%s] %s' % (time.ctime(), text)
-        print line
+    def network_log(self, txt):
+        file = open('network.log', 'a')
+        file.write('[%s] %s\n' % (time.asctime(), txt.encode('utf-8')))
+        file.close()
 
 class Message:
     def __init__(self, bot, sender, command, rest):

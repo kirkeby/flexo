@@ -8,6 +8,7 @@ import random
 
 class BeatMe(Plugin):
     def on_cmd_beatme(self, message, why):
+        raise ValueError('Furrfu')
         if not message.channel:
             return
         

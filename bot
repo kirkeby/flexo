@@ -66,6 +66,6 @@ if __name__ == '__main__':
         elif opt == '-p':
             kwargs['port'] = int(val)
 
-    logging.basicConfig()
+    logging.basicConfig(level=logging.DEBUG, filename='flexo.log')
 
     main(**kwargs)
