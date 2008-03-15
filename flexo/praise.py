@@ -46,7 +46,7 @@ class Praiser(Plugin):
         praiser = message.nick
         if cmd == self.what:
             if rest == self.bot.nick:
-                self.on_self_praise(where, praiser)
+                self.on_self_praise(message)
                 return True
 
             who = replace_pronouns(rest, praiser)
@@ -64,6 +64,6 @@ class Praiser(Plugin):
             return True
 
     def on_self_praise(self, message):
-        message.reply_action(where, u'klapper sig selv på hovedet')
+        message.reply_action(u'klapper sig selv på hovedet')
 
 plugin = Praiser

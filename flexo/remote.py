@@ -58,7 +58,7 @@ class Remote(Plugin):
             self.bot.graceful()
 
     def load(self, name):
-        module = __import__('flexo.' + name, fromlist=['plugin'])
+        module = __import__('flexo.' + name, None, None, ['plugin'])
         klass = module.plugin
         plugin = klass(self.bot)
         plugin.name = name

@@ -20,7 +20,7 @@ class Channels(Plugin):
         for line in open('channels'):
             name = line.strip()
             self.channels[name] = Channel(name, [], []) 
-            self.bot.send('JOIN %s' % name)
+            self.bot.send(u'JOIN %s' % name)
 
     def handle(self, message):
         if Plugin.handle(self, message):

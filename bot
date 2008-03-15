@@ -3,8 +3,8 @@
 import pdb
 from flexo import irc
 
-def main(host='localhost', port=6667, debug=False):
-    bot = irc.Bot((host, port))
+def main(hostname='localhost', port=6667, debug=False):
+    bot = irc.Bot((hostname, port))
     bot.initialize()
     bot.connect()
     bot.receiver()
