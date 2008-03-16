@@ -28,7 +28,7 @@ class Plugin:
         elif message.command == u'JOIN':
             self.on_join(message.channel.name, message.nick)
 
-        elif message.command == u'PART':
+        elif message.command == u'PART' and message.channel:
             self.on_part(message.channel.name, message.nick, message.tail)
 
     def on_connected(self):

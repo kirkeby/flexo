@@ -13,11 +13,18 @@ class Channels(Plugin):
         for name, users, opers in triplets:
             self.channels[name] = Channel(name, users, opers)
 
+    def join(self, name):
+        if name in self.channels:
+            raise ValueError('Already in %s' % name)
+        self.channels[name] = Channel(name, [], [])
+        self.bot.send(u'JOIN %s' % name)
+    def part(self, name):
+        del self.channels[name]
+        self.bot.send(u'PART %s :Så længe sugere!' % name)
+
     def on_connected(self):
         for line in self.bot.open_state('channels'):
-            name = line.strip()
-            self.channels[name] = Channel(name, [], []) 
-            self.bot.send(u'JOIN %s' % name)
+            self.join(line.strip())
 
     def handle(self, message):
         if Plugin.handle(self, message):
@@ -56,43 +63,13 @@ class Channels(Plugin):
 
     def on_part(self, name, nick, reason):
         channel = self.get(name)
-        if channel and nick == self.bot.nick:
-            del self.channels[name]
-
-        elif channel:
+        if channel:
             channel.users.remove(nick)
             if nick in channel.opers:
                 channel.opers.remove(nick)
 
     def get(self, name):
         return self.channels.get(name)
-
-    '''
-    def on_cmd_join(self, message, name):
-        if not is_oper(message.sender):
-            return
-
-        if name in self.channels:
-            message.reply('Der er jeg allerede!')
-            return
-
-        self.channels[name] = Channel(name, [], []) 
-        self.bot.send('JOIN ' + name)
-        message.reply('Oki.')
-
-    def on_cmd_part(self, message, name):
-        if not is_oper(message.sender):
-            return
-
-        if not name and message.channel:
-            name = message.channel.name
-        if not name in self.channels:
-            message.reply('Der er jeg ikke!')
-            return
-
-        message.reply('Jeg fordufter.')
-        self.bot.send('PART %s :%s fik mig til det!' % (name, message.nick))
-    '''
 
 class Channel:
     def __init__(self, name, users, opers):
