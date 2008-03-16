@@ -1,0 +1,2 @@
+- Automatic log rolling
+- Optionally log exceptions to stderr
