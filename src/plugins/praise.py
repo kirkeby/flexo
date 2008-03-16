@@ -52,7 +52,7 @@ class Praiser(Plugin):
             who = replace_pronouns(rest, praiser)
             template = random_line(self.bot.open_state(self.path))
             praise = template.replace('%s', who)
-            message.reply_action(praise)
+            message.reply(u'<action> ' + praise)
 
             return True
 
@@ -65,7 +65,7 @@ class Praiser(Plugin):
             return True
 
     def on_self_praise(self, message):
-        message.reply_action(u'klapper sig selv på hovedet')
+        message.reply(u'<action> klapper sig selv på hovedet')
 
 class Larter(Praiser):
     def __init__(self, bot):
@@ -74,7 +74,7 @@ class Larter(Praiser):
         self.path = 'larts'
 
     def on_self_praise(self, message):
-        message.reply_action(u'losser %s så hårdt i bollerne at '
+        message.reply(u'<action> losser %s så hårdt i bollerne at '
                              u'han ryger ud af %s' % (praiser, where))
         self.bot.send(u'KICK %s %s :Så kan du måske lære det!'
                       % (message.channel.name, message.nick))

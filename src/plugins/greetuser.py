@@ -11,11 +11,9 @@ class GreetUser(Plugin):
         if not greet:
             return
 
-        greet = greet.decode('utf-8')
-        if greet.startswith('<action> '):
-            message.reply_action(greet[9:])
-        else:
-            self.bot.send('PRIVMSG %s :%s' % (message.channel.name, greet))
+        if greet.startswith(u'<action> '):
+            greet = u'\x01ACTION %s\x01' % greet[9:]
+        self.bot.send(u'PRIVMSG %s :%s' % (channel, greet))
 
     def on_cmd_newgreet(self, message, rest):
         if not ' ' in rest:

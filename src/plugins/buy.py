@@ -9,11 +9,10 @@ class Buy(Plugin):
 
         if ' ' in rest:
             who, what = rest.split(' ', 1)
-            action = 'giver %s %s fra %s' % (who, what, message.nick)
-            message.reply_action(action)
+            action = u'<action> giver %s %s fra %s' % (who, what, message.nick)
         else:
-            action = 'installerer et clue-level i %s' % buyer
-            message.reply_action(action)
+            action = u'<action> installerer et clue-level i %s' % message.nick
+        message.reply(action)
 
         return True
 

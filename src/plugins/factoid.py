@@ -7,8 +7,9 @@ from flexo.prelude import got_its
 
 define_format = r'^!!\s*(.*?)\s+(er|har)\s+(.*)$'
 define_re = re.compile(define_format, re.I)
-huh = ['Huh?!', 'I know not this %s you speak of',
-       'Aner det ikke', 'Kein ahnung']
+huh = ['Huh?!', 'I know not this "%s" you speak of',
+       'Aner det ikke', 'Kein ahnung',
+       '<action> aner ikke hvad "%s" er']
 
 class Factoid(Plugin):
     def on_public_msg(self, message):
@@ -32,22 +33,16 @@ class Factoid(Plugin):
                 for l in self.bot.open_state('factoids') ]
         facts = [ (how, fact) for key, how, fact in all
                   if key.lower() == what.lower() ]
+
         if not facts:
             reply = random.choice(huh).replace('%s', what)
-            message.reply(reply)
-
         else:
-            how, text = random.choice(facts)
-            if text.startswith('<reply> '):
-                if message.channel:
-                    self.bot.send('PRIVMSG %s :%s' % (message.channel.name, text[8:]))
-                elif message.nick:
-                    self.bot.send('PRIVMSG %s :%s' % (message.nick, text[8:]))
-            elif text.startswith('<action> '):
-                message.reply_action(text[9:])
-            else:
-                txt = 'Jeg mener helt bestemt at %s %s %s' % (what, how, text)
-                message.reply(txt)
+            how, reply = random.choice(facts)
+            if not reply.startswith(u'<'):
+                reply = u'Jeg mener helt bestemt at %s %s %s' \
+                        % (what, how, reply)
+            reply = reply.replace('%s', message.nick)
+        message.reply(reply)
         
     def on_define(self, message, what):
         m = define_re.match(what)
@@ -75,9 +70,9 @@ class Factoid(Plugin):
                 facts[key.lower()] = key
 
         if facts:
-            reply = 'Jeg ved ting om ' + ', '.join(facts.values())
+            reply = u'Jeg ved ting om ' + ', '.join(facts.values())
         else:
-            reply = 'No clue'
+            reply = u'Jeg kender ikke nogen ting som starter med "%s"' % prefix
         message.reply(reply)
 
 plugin = Factoid

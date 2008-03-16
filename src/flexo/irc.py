@@ -211,15 +211,16 @@ class Message:
         self.tail = rest[-1]
 
     def reply(self, what):
-        if self.channel and self.nick:
-            self.bot.send(u'PRIVMSG %s :%s, %s'
-                          % (self.channel.name, self.nick, what))
-        elif self.nick:
-            self.bot.send(u'PRIVMSG %s :%s' % (self.nick, what))
-    def reply_action(self, what):
         if self.channel:
-            self.bot.send(u'PRIVMSG %s :\x01ACTION %s\x01'
-                          % (self.channel.name, what))
-        elif self.nick:
-            self.bot.send(u'PRIVMSG %s :\x01ACTION %s\x01'
-                          % (self.nick, what))
+            where = self.channel.name
+        else:
+            where = self.nick
+
+        if what.startswith('<action> '):
+            what = u'\x01ACTION %s\x01' % what[9:]
+        elif what.startswith('<reply> '):
+            what = what.split(' ', 1)[1]
+        elif self.channel and self.nick:
+            what = u'%s, %s' % (self.nick, what)
+
+        self.bot.send(u'PRIVMSG %s :%s' % (where, what))
