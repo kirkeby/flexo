@@ -5,7 +5,7 @@ from flexo.prelude import random_element
 class GreetUser(Plugin):
     def on_join(self, channel, nick):
         nick = nick.encode('utf-8')
-        greet = random_element([ g.split(' ', 1)[1]
+        greet = random_element([ g.split(' ', 1)[1].decode('utf-8')
                                  for g in self.bot.open_state('greetings')
                                  if g.startswith(nick + ' ') ])
         if not greet:
