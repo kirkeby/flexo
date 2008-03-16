@@ -33,6 +33,8 @@ class Channels(Plugin):
     def on_connected(self):
         for line in self.bot.open_state('channels'):
             self.join(line.strip())
+    def on_disconnected(self):
+        self.channels = {}
 
     def handle(self, message):
         if Plugin.handle(self, message):

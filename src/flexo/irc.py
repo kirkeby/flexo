@@ -13,6 +13,8 @@ from flexo.plugin import Plugin
 log = logging.getLogger('flexo.irc')
 
 reconnect_delay = 67
+timeout = 180
+max_timeouts = 2
 
 class Plugins(object):
     __slots__ = '_names', '_plugins', '_bot'
@@ -52,16 +54,18 @@ class Plugins(object):
         self._plugins[name] = replacement
 
 class Bot(object):
-    __slots__ = ['server', 'address', 'nick', 'name', 'usermode',
+    __slots__ = ['server', 'server_name', 'address', 'nick', 'name', 'usermode',
                  'in_encodings', 'out_encoding', 'plugins', 'reason',
-                 'exc_info']
+                 'exc_info', 'timeouts']
 
-    def __init__(self, address='localhost'):
+    def __init__(self, address):
         self.server = None
+        self.server_name = None
         self.address = address
         self.nick = u'flexo'
         self.name = u'Flexo'
         self.usermode = u'-sw'
+        self.timeouts = 0
 
         self.in_encodings = 'iso-8859-1', 'utf-8'
         self.out_encoding = 'iso-8859-1'
@@ -82,17 +86,30 @@ class Bot(object):
                 log.exception('Network error')
 
             if self.reason:
+                if self.reason <> 'graceful':
+                    self.disconnect()
                 break
 
             time.sleep(reconnect_delay)
+
+    def disconnect(self):
+        log.info('Closing connection to server')
+        try:
+            self.server.close()
+        except:
+            log.exception('Error closing socket')
+        self.server = None
+
+        for plugin in self.plugins:
+            plugin.on_disconnected()
 
     def quit(self, reason):
         self.reason = 'quit'
         self.send(u'QUIT :' + reason)
 
     def graceful(self):
-        log.info('Scheduling graceful code reload')
         self.reason = 'graceful'
+        self.send(u'PING ' + self.server_name)
 
     def initialize(self):
         for line in self.open_state('plugins'):
@@ -117,6 +134,7 @@ class Bot(object):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(self.address)
         self.server = s.makefile('rw')
+        self.server_name = self.address[0]
 
         self.send(u'NICK %s' % self.nick)
         self.send(u'USER %s %s localhost :%s'
@@ -131,12 +149,25 @@ class Bot(object):
         self.server.flush()
 
     def interact(self):
+        self.server._sock.settimeout(timeout)
+
         while not self.reason:
-            line = self.server.readline()
+            try:
+                line = self.server.readline()
+                self.timeouts = 0
+            except socket.timeout:
+                self.timeouts = self.timeouts + 1
+                if self.timeouts == max_timeouts:
+                    log.warning('Connection timed out')
+                    self.disconnect()
+                    break
+                self.send(u'PING ' + self.server_name)
+                continue
+
             if line == '':
                 if not self.reason:
-                    log.warning('[E] Lost connection')
-                self.server = None
+                    log.warning('Lost connection')
+                    self.disconnect()
                 break
 
             line = line.strip()
@@ -177,14 +208,11 @@ class Bot(object):
             return
 
         message = self.parse_line(line)
+        if message.command == '001':
+            self.server_name = message.sender
         for plugin in self.plugins:
             if plugin.handle(message):
-                log.debug('Plugin %s handled %s from %s',
-                          plugin.name, message.command, message.sender)
                 break
-        else:
-            log.debug('No plugin handled %s from %s',
-                      message.command, message.sender)
 
     def network_log(self, txt):
         file = open('network.log', 'a')

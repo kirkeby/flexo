@@ -79,7 +79,7 @@ class Larter(Praiser):
         self.bot.send(u'KICK %s %s :Så kan du måske lære det!'
                       % (message.channel.name, message.nick))
 
-class MetaPlugin:
+class MetaPlugin(Plugin):
     def __init__(self, bot):
         self.plugins = Praiser(bot), Larter(bot)
     def handle(self, message):
@@ -87,10 +87,5 @@ class MetaPlugin:
             if plugin.handle(message):
                 return True
         return False
-    def get_state(self):
-        return tuple(p.get_state() for p in self.plugins)
-    def set_state(self, states):
-        for p, state in zip(self.plugins, states):
-            p.set_state(state)
 
 plugin = MetaPlugin

@@ -33,6 +33,8 @@ class Plugin:
 
     def on_connected(self):
         pass
+    def on_disconnected(self):
+        pass
 
     def on_private_msg(self, message):
         says = message.rest[-1]
