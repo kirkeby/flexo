@@ -18,9 +18,17 @@ class Channels(Plugin):
             raise ValueError('Already in %s' % name)
         self.channels[name] = Channel(name, [], [])
         self.bot.send(u'JOIN %s' % name)
+        self.save_channels()
     def part(self, name):
         del self.channels[name]
         self.bot.send(u'PART %s :Så længe sugere!' % name)
+        self.save_channels()
+
+    def save_channels(self):
+        file = self.bot.open_state('channels', 'w')
+        for name in self.channels.keys():
+            file.write(name + '\n')
+        file.close()
 
     def on_connected(self):
         for line in self.bot.open_state('channels'):
@@ -36,7 +44,7 @@ class Channels(Plugin):
 
             if mode == '-o':
                 for someone in who:
-                    if someone in channel.opers:
+                    if someone in message.channel.opers:
                         message.channel.opers.remove(someone)
             elif mode == '+o':
                 for someone in who:
