@@ -1,21 +1,55 @@
 # -*- encoding: utf-8 -*-
+
+from __future__ import absolute_import
+
 import sys
 import time
 import socket
-import traceback
-import sys
-import os
 import logging
+import imp
 
-from pickle import dumps
-from pickle import loads
-
-from flexo.remote import Remote
 from flexo.plugin import Plugin
 
 log = logging.getLogger('flexo.irc')
 
 reconnect_delay = 67
+
+class Plugins(object):
+    __slots__ = '_names', '_plugins', '_bot'
+
+    def __init__(self, bot):
+        self._bot = bot
+        self._names = []
+        self._plugins = {}
+
+    def __getattr__(self, name):
+        return self._plugins[name]
+    def __iter__(self):
+        return iter(self._plugins[name] for name in self._names)
+
+    def imp(self, name):
+        path = 'src/plugins/%s.py' % name
+        file = open(path, 'r')
+        description = '.py', 'r', imp.PY_SOURCE
+        try:
+            module = imp.load_module(name, file, path, description)
+        except:
+            file.close()
+            raise
+
+        klass = module.plugin
+        plugin = klass(self._bot)
+        plugin.name = name
+
+        return plugin
+
+    def load(self, name):
+        replacement = self.imp(name)
+        if self._plugins.has_key(name):
+            replacement.set_state(self._plugins[name].get_state())
+        else:
+            self._names.append(name)
+        self._plugins[name] = replacement
 
 class Bot(object):
     __slots__ = ['server', 'address', 'nick', 'name', 'usermode',
@@ -35,13 +69,7 @@ class Bot(object):
         self.reason = None
         self.exc_info = None
 
-        self.plugins = []
-
-    def __getattr__(self, name):
-        for plugin in self.plugins:
-            if plugin.name == name:
-                return plugin
-        raise KeyError(name)
+        self.plugins = Plugins(self)
 
     def run(self):
         while True:
@@ -67,17 +95,21 @@ class Bot(object):
         self.reason = 'graceful'
 
     def initialize(self):
-        self.plugins = [Remote(self)]
-        for line in open('plugins'):
-            self.plugins.append(self.remote.load(line.strip()))
+        for line in self.open_state('plugins'):
+            self.plugins.load(line.strip())
 
     def reinitialize(self, other):
+        if not other:
+            self.reason = None
+            return
+            
         for key in other.__slots__:
             setattr(self, key, getattr(other, key))
 
         self.reason = None
 
-        # FIXME - reload plugins
+        for plugin in self.plugins:
+            self.plugins.load(plugin.name)
 
     def connect(self):
         assert not self.server
@@ -147,12 +179,20 @@ class Bot(object):
         message = self.parse_line(line)
         for plugin in self.plugins:
             if plugin.handle(message):
+                log.debug('Plugin %s handled %s from %s',
+                          plugin.name, message.command, message.sender)
                 break
+        else:
+            log.debug('No plugin handled %s from %s',
+                      message.command, message.sender)
 
     def network_log(self, txt):
         file = open('network.log', 'a')
         file.write('[%s] %s\n' % (time.asctime(), txt.encode('utf-8')))
         file.close()
+
+    def open_state(self, name, mode='r'):
+        return open('state/' + name, mode)
 
 class Message:
     def __init__(self, bot, sender, command, rest):
@@ -167,7 +207,7 @@ class Message:
         self.command = command
         self.rest = rest
 
-        self.channel = self.bot.channels.get(rest[0])
+        self.channel = self.bot.plugins.channels.get(rest[0])
         self.tail = rest[-1]
 
     def reply(self, what):

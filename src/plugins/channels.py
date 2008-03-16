@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 
 from flexo.plugin import Plugin
-from flexo.prelude import is_oper
 
 class Channels(Plugin):
     def __init__(self, bot):
@@ -15,7 +14,7 @@ class Channels(Plugin):
             self.channels[name] = Channel(name, users, opers)
 
     def on_connected(self):
-        for line in open('channels'):
+        for line in self.bot.open_state('channels'):
             name = line.strip()
             self.channels[name] = Channel(name, [], []) 
             self.bot.send(u'JOIN %s' % name)
@@ -68,6 +67,7 @@ class Channels(Plugin):
     def get(self, name):
         return self.channels.get(name)
 
+    '''
     def on_cmd_join(self, message, name):
         if not is_oper(message.sender):
             return
@@ -92,6 +92,7 @@ class Channels(Plugin):
 
         message.reply('Jeg fordufter.')
         self.bot.send('PART %s :%s fik mig til det!' % (name, message.nick))
+    '''
 
 class Channel:
     def __init__(self, name, users, opers):

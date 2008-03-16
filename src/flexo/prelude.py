@@ -1,4 +1,7 @@
 # -*- encoding: utf-8 -*-
+
+from __future__ import absolute_import
+
 from time import localtime
 
 import random
@@ -8,16 +11,12 @@ got_its = ['Yeeees, yes', 'Har det!', 'Oki', 'You speak wisely, sir']
 def is_it_friday():
     return localtime().tm_wday == 4
 
-def is_oper(sender):
-    for line in open('opers'):
-        if line.strip() == sender:
-            return True
 def is_bot(nick):
     return nick == 'Bender'
 
-def random_line(path):
+def random_line(file):
     '''Retrieve a random line from a file, decoded as UTF-8 and stripped.'''
-    return random_element(open(path, 'r')).decode('utf-8').strip()
+    return random_element(file).decode('utf-8').strip()
     
 def random_element(iter):
     '''Retrieve a random item from an iterable object of unknown length,

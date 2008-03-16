@@ -6,7 +6,7 @@ class GreetUser(Plugin):
     def on_join(self, channel, nick):
         nick = nick.encode('utf-8')
         greet = random_element([ g.split(' ', 1)[1]
-                                 for g in open('greetings')
+                                 for g in self.bot.open_state('greetings')
                                  if g.startswith(nick + ' ') ])
         if not greet:
             return
@@ -22,7 +22,7 @@ class GreetUser(Plugin):
             message.reply(u'Syntaksen er: !newgreet <nick> <besked>')
             return
 
-        open('greetings', 'a').write(rest.encode('utf-8') + '\n')
+        self.bot.open_state('greetings', 'a').write(rest.encode('utf-8') + '\n')
         message.reply(u'Det skal jeg huske!')
 
 plugin = GreetUser

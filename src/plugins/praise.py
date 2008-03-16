@@ -45,12 +45,13 @@ class Praiser(Plugin):
     def on_public_cmd(self, message, cmd, rest):
         praiser = message.nick
         if cmd == self.what:
-            if rest == self.bot.nick:
+            if rest.lower() == self.bot.nick.lower():
                 self.on_self_praise(message)
                 return True
 
             who = replace_pronouns(rest, praiser)
-            praise = random_line(self.path).replace('%s', who)
+            template = random_line(self.bot.open_state(self.path))
+            praise = template.replace('%s', who)
             message.reply_action(praise)
 
             return True
@@ -59,11 +60,37 @@ class Praiser(Plugin):
             if not '%s' in rest:
                 message.reply(u'Halllo. Der skal være %%s i en %s!' % self.what)
             else:
-                open(self.path, 'a').write(rest.encode('utf-8') + '\n')
+                self.bot.open_state(self.path, 'a').write(rest.encode('utf-8') + '\n')
                 message.reply(random.choice(got_its))
             return True
 
     def on_self_praise(self, message):
         message.reply_action(u'klapper sig selv på hovedet')
 
-plugin = Praiser
+class Larter(Praiser):
+    def __init__(self, bot):
+        self.bot = bot
+        self.what = 'lart'
+        self.path = 'larts'
+
+    def on_self_praise(self, message):
+        message.reply_action(u'losser %s så hårdt i bollerne at '
+                             u'han ryger ud af %s' % (praiser, where))
+        self.bot.send(u'KICK %s %s :Så kan du måske lære det!'
+                      % (message.channel.name, message.nick))
+
+class MetaPlugin:
+    def __init__(self, bot):
+        self.plugins = Praiser(bot), Larter(bot)
+    def handle(self, message):
+        for plugin in self.plugins:
+            if plugin.handle(message):
+                return True
+        return False
+    def get_state(self):
+        return tuple(p.get_state() for p in self.plugins)
+    def set_state(self, states):
+        for p, state in zip(self.plugins, states):
+            p.set_state(state)
+
+plugin = MetaPlugin

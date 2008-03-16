@@ -29,7 +29,7 @@ class Factoid(Plugin):
 
     def on_lookup(self, message, what):
         all = [ l.strip().decode('utf-8').split('\t', 2)
-                for l in open('factoids') ]
+                for l in self.bot.open_state('factoids') ]
         facts = [ (how, fact) for key, how, fact in all
                   if key.lower() == what.lower() ]
         if not facts:
@@ -60,13 +60,13 @@ class Factoid(Plugin):
         thing = thing.replace('\t', ' ')
         
         line = u'%s\t%s\t%s\n' % (thing, how, text)
-        open('factoids', 'a').write(line.encode('utf-8'))
+        self.bot.open_state('factoids', 'a').write(line.encode('utf-8'))
 
         message.reply(random.choice(got_its))
 
     def on_list(self, message, prefix):
         all = [ l.strip().decode('utf-8').split('\t', 1)
-                for l in open('factoids') ]
+                for l in self.bot.open_state('factoids') ]
         facts = {}
         for key, fact in all:
             if key.lower() in facts:

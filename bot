@@ -3,15 +3,19 @@
 import sys
 import logging
 from threading import Thread
-from flexo import irc
 from code import interact
 
 log = logging.getLogger('bot')
 
-def run_bot(context, bot_factory):
-    global irc
+def load_flexo():
+    names = [ n for n in sys.modules
+                if n == 'flexo' or n.startswith('flexo.') ]
+    for name in names:
+        sys.modules[name] = reload(sys.modules[name])
+    return __import__('flexo.irc').irc
 
-    bot = context['bot'] = bot_factory(irc)
+def run_bot(context, bot_factory):
+    bot = context['bot'] = bot_factory()
     bot.initialize()
 
     while not bot.reason:
@@ -23,10 +27,11 @@ def run_bot(context, bot_factory):
             old_bot = bot
 
             try:
-                irc = reload(irc)
-                bot = context['bot'] = bot_factory(irc)
+                bot = context['bot'] = bot_factory()
             except:
                 log.exception('Graceful reload of code failed')
+                bot.reinitialize(None)
+                continue
 
             bot.reinitialize(old_bot)
             old_bot = None
@@ -36,7 +41,8 @@ def run_console(context):
         interact(local=context)
 
 def main(hostname='localhost', port=6667, debug=False):
-    def bot_factory(irc):
+    def bot_factory():
+        irc = load_flexo()
         return irc.Bot((hostname, port))
 
     context = {}
@@ -66,6 +72,10 @@ if __name__ == '__main__':
         elif opt == '-p':
             kwargs['port'] = int(val)
 
-    logging.basicConfig(level=logging.DEBUG, filename='flexo.log')
+    log_format = '[%(asctime)s] %(name)s %(levelname)s %(message)s'
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format=log_format,
+                        filename='flexo.log')
 
     main(**kwargs)
