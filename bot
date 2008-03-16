@@ -2,6 +2,8 @@
 
 import sys
 import logging
+from logging import StreamHandler
+from logging.handlers import RotatingFileHandler
 from threading import Thread
 from code import interact
 
@@ -40,10 +42,10 @@ def run_console(context):
     while True:
         interact(local=context)
 
-def main(hostname='localhost', port=6667, debug=False):
+def main(opts):
     def bot_factory():
         irc = load_flexo()
-        return irc.Bot((hostname, port))
+        return irc.Bot((opts.hostname, opts.port))
 
     context = {}
 
@@ -56,26 +58,34 @@ def main(hostname='localhost', port=6667, debug=False):
     bot_thread.join()
     sys.exit()
 
+log_format = '[%(asctime)s] %(name)s %(levelname)s %(message)s'
+def configure_logging(opts):
+    root = logging.getLogger('')
+    root.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(log_format)
+
+    logger = RotatingFileHandler('flexo.log', maxBytes=50 * 1024, backupCount=3)
+    logger.setLevel(logging.DEBUG)
+    logger.setFormatter(formatter)
+    root.addHandler(logger)
+
+    logger = StreamHandler()
+    logger.setLevel(logging.ERROR)
+    logger.setFormatter(formatter)
+    root.addHandler(logger)
+
 if __name__ == '__main__':
-    import getopt
+    from optparse import OptionParser
 
-    kwargs = {}
-    short_opts = 'dh:p:'
+    parser = OptionParser()
+    parser.add_option('-H', '--hostname', default='localhost')
+    parser.add_option('-P', '--port', type='int', default=6667)
+    opts, args = parser.parse_args()
 
-    opts, args = getopt.getopt(sys.argv[1:], short_opts)
-    for opt, val in opts:
-        if opt == '-d':
-            kwargs['debug'] = True
+    if args:
+        print >>sys.stderr, 'No arguments, please.'
+        sys.exit(1)
 
-        elif opt == '-h':
-            kwargs['hostname'] = val
-        elif opt == '-p':
-            kwargs['port'] = int(val)
+    configure_logging(opts)
 
-    log_format = '[%(asctime)s] %(name)s %(levelname)s %(message)s'
-
-    logging.basicConfig(level=logging.DEBUG,
-                        format=log_format,
-                        filename='flexo.log')
-
-    main(**kwargs)
+    main(opts)
