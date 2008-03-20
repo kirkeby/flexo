@@ -1,3 +1,6 @@
+# -*- encoding: utf-8 -*-
+from __future__ import absolute_import
+
 import re
 
 def is_channel(name):
@@ -30,3 +33,26 @@ def parse_prefix(prefix):
         return tuple(prefix.split('!', 1))
     else:
         return prefix, None
+
+numerical_names = {
+    u'001': u'WELCOME',
+    u'004': u'MYINFO',
+    u'353': u'NAMREPLY',
+}
+
+message_parameters = {
+    u'PRIVMSG': ('channel', 'says',),
+    u'QUIT': ('channel', 'reason',),
+    u'JOIN': ('channel',),
+    u'PART': ('channel', 'reason',),
+    u'MODE': ('channel', 'mode', 'what'),
+    u'TOPIC': ('channel', 'topic',),
+    u'KICK': ('channel', 'target', 'reason'),
+    u'NAMREPLY': ('nick', 'chantype', 'channel', 'names'),
+    u'MYINFO': ('nick', 'servername',),
+    u'PING': ('source',),
+}
+def parse_parameters(command, parameters):
+    command = numerical_names.get(command, command)
+    result = dict(zip(message_parameters.get(command, ()), parameters))
+    return result

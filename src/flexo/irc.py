@@ -10,7 +10,7 @@ import imp
 
 from flexo.plugin import Plugin
 from flexo.protocol import parse_message
-from flexo.protocol import parse_prefix
+from flexo.message import Message
 
 log = logging.getLogger('flexo.irc')
 
@@ -55,10 +55,6 @@ class Plugins(object):
             self._names.append(name)
         self._plugins[name] = replacement
 
-    def unload(self, name):
-        self._names.remove(name)
-        del self._plugins[name]
-
 class Bot(object):
     __slots__ = ['server', 'server_name', 'address', 'nick', 'name', 'usermode',
                  'in_encodings', 'out_encoding', 'plugins', 'reason',
@@ -70,7 +66,7 @@ class Bot(object):
         self.address = address
         self.nick = u'flexo'
         self.name = u'Flexo'
-        self.usermode = u'-sw'
+        self.usermode = u'0'
         self.timeouts = 0
 
         self.in_encodings = 'iso-8859-1', 'utf-8'
@@ -106,9 +102,6 @@ class Bot(object):
             log.exception('Error closing socket')
         self.server = None
 
-        for plugin in self.plugins:
-            plugin.on_disconnected()
-
     def quit(self, reason):
         self.reason = 'quit'
         self.send(u'QUIT :' + reason)
@@ -131,9 +124,7 @@ class Bot(object):
 
         self.reason = None
 
-        plugins = list(self.plugins)
-        self.plugins = Plugins(self)
-        for plugin in plugins:
+        for plugin in self.plugins:
             self.plugins.load(plugin.name)
 
     def connect(self):
@@ -186,7 +177,7 @@ class Bot(object):
                 except UnicodeError:
                     pass
             else:
-                log.info('[E] Could not decode %r' % line)
+                log.warning('Could not decode %r' % line)
                 continue
 
             self.network_log(u'< ' + line)
@@ -213,32 +204,3 @@ class Bot(object):
 
     def open_state(self, name, mode='r'):
         return open('state/' + name, mode)
-
-class Message:
-    def __init__(self, bot, prefix, command, rest):
-        self.bot = bot
-        self.prefix = prefix
-        if prefix:
-            self.nick, self.userhost = parse_prefix(self.prefix)
-        self.command = command
-        self.rest = rest
-
-        # FIXME - split targets by ',' and only for messages that actually
-        # take a channel as first parameter.
-        self.channel = self.bot.plugins.channels.get(rest[0])
-        self.tail = rest[-1]
-
-    def reply(self, what):
-        if self.channel:
-            where = self.channel.name
-        else:
-            where = self.nick
-
-        if what.startswith('<action>'):
-            what = u'\x01ACTION %s\x01' % what[8:].strip()
-        elif what.startswith('<reply>'):
-            what = what[7:].strip()
-        elif self.channel and self.nick:
-            what = u'%s, %s' % (self.nick, what)
-
-        self.bot.send(u'PRIVMSG %s :%s' % (where, what))

@@ -4,3 +4,8 @@
 \.py[co]$
 \.egg-info
 \.log
+state/channels
+state/factoids
+state/greetings
+state/larts
+state/praises

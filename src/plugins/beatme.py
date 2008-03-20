@@ -7,7 +7,7 @@ from flexo.prelude import is_bot
 import random
 
 class BeatMe(Plugin):
-    def on_cmd_beatme(self, message, why):
+    def on_bang_beatme(self, message, why):
         if not message.channel:
             return
         

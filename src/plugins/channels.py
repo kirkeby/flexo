@@ -30,58 +30,38 @@ class Channels(Plugin):
             file.write(name + '\n')
         file.close()
 
-    def on_connected(self):
+    def on_welcome(self, message):
+        self.channels = {}
         for line in self.bot.open_state('channels'):
             self.join(line.strip())
-    def on_disconnected(self):
-        self.channels = {}
 
-    def handle(self, message):
-        if Plugin.handle(self, message):
-            return True
+    def on_mode(self, message):
+        if message.mode == '-o':
+            for who in message.what.split():
+                message.channel.on_deop(who)
+        elif message.mode == '+o':
+            for who in message.what.split():
+                message.channel.on_op(who)
 
-        if message.channel and message.command == 'MODE':
-            name, mode, who = message.rest
-            who = who.split()
-            self.on_mode(message.channel, mode, who)
+    def on_namreply(self, message):
+        for nick in message.names.split():
+            if nick[0] in '@+':
+                flag, nick = nick[0], nick[1:]
+            else:
+                flag = ''
 
-        elif message.command == '353':
-            name = message.rest[2]
-            channel = self.get(name)
-            who = message.tail.split()
-            self.on_chanlist(channel, who)
+            message.channel.on_join(nick)
+            if flag == '@':
+                message.channel.on_op(nick)
 
-    def on_mode(self, channel, mode, who):
-        if mode == '-o':
-            for someone in who:
-                if someone in message.channel.opers:
-                    message.channel.opers.remove(someone)
-        elif mode == '+o':
-            for someone in who:
-                message.channel.opers.append(someone)
-
-    def on_chanlist(self, channel, who):
-        for user in who:
-            if user[0] == '@':
-                user = user[1:]
-                if not user in channel.opers:
-                    channel.opers.append(user)
-            if user[0] == '+':
-                user = user[1:]
-            if not user in channel.users:
-                channel.users.append(user)
-
-    def on_join(self, name, nick):
-        channel = self.get(name)
-        if channel:
-            channel.users.append(nick)
-
-    def on_part(self, name, nick, reason):
-        channel = self.get(name)
-        if channel:
-            channel.users.remove(nick)
-            if nick in channel.opers:
-                channel.opers.remove(nick)
+    def on_join(self, message):
+        message.channel.on_join(message.nick)
+    def on_part(self, message):
+        message.channel.on_part(message.nick)
+    def on_kick(self, message):
+        message.channel.on_part(message.nick)
+    def on_quit(self, message):
+        message.channel.on_part(message.nick)
 
     def get(self, name):
         return self.channels.get(name)
@@ -91,5 +71,19 @@ class Channel:
         self.name = name
         self.users = users
         self.opers = opers
+
+    def on_op(self, who):
+        if not who in self.opers:
+            self.opers.append(who)
+    def on_deop(self, who):
+        if who in self.opers:
+            self.opers.remove(who)
+    def on_join(self, who):
+        if not who in self.users:
+            self.users.append(who)
+    def on_part(self, who):
+        if who in self.users:
+            self.users.remove(who)
+        self.on_deop(who)
 
 plugin = Channels

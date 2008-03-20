@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 from flexo.prelude import is_bot
+from flexo.protocol import numerical_names
 
 class Plugin:
     def __init__(self, bot):
@@ -14,63 +15,23 @@ class Plugin:
         pass
 
     def handle(self, message):
-        if message.command == u'001':
-            self.on_connected()
+        if message.command == u'PRIVMSG' and is_bot(message.nick):
+            return True
 
-        elif message.command == u'PRIVMSG':
-            if is_bot(message.nick):
-                return True
-            if message.channel and message.nick:
-                return self.on_public_msg(message)
-            elif message.nick:
-                return self.on_private_msg(message)
+        command_name = numerical_names.get(message.command, message.command)
+        handler = getattr(self, u'on_' + command_name.lower(), None)
+        if handler:
+            return handler(message)
 
-        elif message.command == u'JOIN':
-            self.on_join(message.channel.name, message.nick)
-
-        elif message.command == u'PART' and message.channel:
-            self.on_part(message.channel.name, message.nick, message.tail)
-
-    def on_connected(self):
-        pass
-    def on_disconnected(self):
-        pass
-
-    def on_private_msg(self, message):
-        says = message.rest[-1]
-        if not says.startswith('!'):
+    def on_privmsg(self, message):
+        if not message.says.startswith('!'):
             return
 
-        pieces = says.split(None, 1)
-        if len(pieces) == 1:
-            pieces.append('')
-        cmd = pieces[0][1:].encode('ascii', 'ignore')
-        
-        return self.on_private_cmd(message, cmd, pieces[1])
+        pieces = message.says.split(None, 1)
+        pieces.append(u'')
+        cmd, rest = pieces[:2]
 
-    def on_public_msg(self, message):
-        says = message.tail
-        if not says.startswith('!'):
-            return
-
-        pieces = says.split(None, 1)
-        if len(pieces) == 1:
-            pieces.append('')
-        cmd = pieces[0][1:].encode('ascii', 'ignore')
-
-        return self.on_public_cmd(message, cmd, pieces[1])
-
-    def on_join(self, channel, nick):
-        pass
-    def on_part(self, channel, nick, reason):
-        pass
-
-    def on_public_cmd(self, message, cmd, rest):
-        return self.on_cmd(message, cmd, rest)
-    def on_private_cmd(self, message, cmd, rest):
-        return self.on_cmd(message, cmd, rest)
-    def on_cmd(self, message, cmd, rest):
-        handler = getattr(self, 'on_cmd_' + cmd, None)
+        handler = getattr(self, 'on_bang_' + cmd[1:], None)
         if not handler:
             return
         handler(message, rest)

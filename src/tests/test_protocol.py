@@ -1,6 +1,7 @@
 from flexo.protocol import is_channel
 from flexo.protocol import parse_message
 from flexo.protocol import parse_prefix
+from flexo.protocol import parse_parameters
 
 def test_is_channel():
     assert is_channel('#cafeen')
@@ -29,3 +30,13 @@ def test_parse_prefix():
     assert parse_prefix('localhost.localdomain') == ('localhost.localdomain', None)
     assert parse_prefix('kirkeby!~kirkeby') == ('kirkeby', '~kirkeby')
     assert parse_prefix('x!y@z') == ('x', 'y@z')
+
+def test_parse_parameters():
+    assert parse_parameters('KICK', ['#cafeen', 'Bender']) \
+           == { 'channel': '#cafeen', 'target': 'Bender', }
+    assert parse_parameters('KICK', ['#cafeen', 'Bender', 'Qux']) \
+           == { 'channel': '#cafeen', 'target': 'Bender', 'reason': 'Qux', }
+    assert parse_parameters('PRIVMSG', ['#cafeen', 'Blah, blah.']) \
+           == { 'channel': '#cafeen', 'says': 'Blah, blah.' }
+    assert parse_parameters('PRIVMSG', ['flexo', 'Blah, blah.']) \
+           == { 'says': 'Blah, blah.' }

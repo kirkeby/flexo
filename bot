@@ -14,6 +14,7 @@ def load_flexo():
     names = [ n for n in sys.modules
                 if n == 'flexo' or n.startswith('flexo.') ]
     for name in names:
+        log.info('Reloading %s', name)
         sys.modules[name] = reload(sys.modules[name])
     return __import__('flexo.irc').irc
 
@@ -41,14 +42,13 @@ def run_bot(context, bot_factory):
 
 def run_console(context):
     while True:
-        ctx = context.copy()
         try:
             source = open('state/repl.py').read()
             code = compile(source, 'repl.py', 'exec')
-            eval(code, ctx)
+            eval(code, context)
         except:
             log.exception('Executing reply.py')
-        interact(local=ctx)
+        interact(local=context)
 
 def main(opts):
     def bot_factory():

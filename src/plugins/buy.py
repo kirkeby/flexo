@@ -3,7 +3,7 @@ from flexo.plugin import Plugin
 from flexo.prelude import get_nick_channel
 
 class Buy(Plugin):
-    def on_cmd_buy(self, message, rest):
+    def on_bang_buy(self, message, rest):
         if not message.channel:
             return
 
@@ -13,7 +13,5 @@ class Buy(Plugin):
         else:
             action = u'<action> installerer et clue-level i %s' % message.nick
         message.reply(action)
-
-        return True
 
 plugin = Buy

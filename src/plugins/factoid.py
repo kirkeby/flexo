@@ -12,8 +12,9 @@ huh = ['Huh?!', 'I know not this "%s" you speak of',
        '<action> aner ikke hvad "%s" er']
 
 class Factoid(Plugin):
-    def on_public_msg(self, message):
-        what = message.tail
+    def on_privmsg(self, message):
+        what = message.says
+
         if what.startswith('!?'):
             what = what[2:].strip()
             self.on_lookup(message, what)
@@ -23,10 +24,11 @@ class Factoid(Plugin):
             self.on_define(message, what)
             return True
 
-        elif what.startswith('!listfacts '):
-            prefix = what.split(' ', 1)[1].strip()
-            self.on_list(message, prefix.lower())
-            return True
+        return Plugin.on_privmsg(self, message)
+
+    def on_bang_listfacts(self, message, prefix):
+        self.on_list(message, prefix.lower())
+        return True
 
     def on_lookup(self, message, what):
         all = [ l.strip().decode('utf-8').split('\t', 2)
