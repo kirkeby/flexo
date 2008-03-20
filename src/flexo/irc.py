@@ -9,6 +9,8 @@ import logging
 import imp
 
 from flexo.plugin import Plugin
+from flexo.protocol import parse_message
+from flexo.protocol import parse_prefix
 
 log = logging.getLogger('flexo.irc')
 
@@ -195,27 +197,11 @@ class Bot(object):
                 log.exception('Exception handling %r' % line)
 
     def parse_line(self, line):
-        sender, rest = line.split(u' ', 1)
-        if u':' in rest:
-            before, after = rest.split(u':', 1)
-            pieces = before.split()
-            pieces.append(after)
-        else:
-            pieces = rest.split(u' ')
-
-        command = pieces.pop(0)
-        return Message(self, sender, command, pieces)
+        prefix, command, parameters = parse_message(line)
+        return Message(self, prefix, command, parameters)
 
     def handler(self, line):
-        if line.startswith(u'NOTICE '):
-            return
-        if line.startswith(u'PING '):
-            self.send(line.replace('PING', 'PONG'))
-            return
-
         message = self.parse_line(line)
-        if message.command == '001':
-            self.server_name = message.sender
         for plugin in self.plugins:
             if plugin.handle(message):
                 break
@@ -229,18 +215,16 @@ class Bot(object):
         return open('state/' + name, mode)
 
 class Message:
-    def __init__(self, bot, sender, command, rest):
+    def __init__(self, bot, prefix, command, rest):
         self.bot = bot
-        self.sender = sender
-
-        if sender.startswith(u':') and u'!' in sender:
-            self.nick = sender.split(u'!', 1)[0][1:]
-        else:
-            self.nick = None
-        
+        self.prefix = prefix
+        if prefix:
+            self.nick, self.userhost = parse_prefix(self.prefix)
         self.command = command
         self.rest = rest
 
+        # FIXME - split targets by ',' and only for messages that actually
+        # take a channel as first parameter.
         self.channel = self.bot.plugins.channels.get(rest[0])
         self.tail = rest[-1]
 
