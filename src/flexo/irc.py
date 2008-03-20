@@ -250,10 +250,10 @@ class Message:
         else:
             where = self.nick
 
-        if what.startswith('<action> '):
-            what = u'\x01ACTION %s\x01' % what[9:]
-        elif what.startswith('<reply> '):
-            what = what.split(' ', 1)[1]
+        if what.startswith('<action>'):
+            what = u'\x01ACTION %s\x01' % what[8:].strip()
+        elif what.startswith('<reply>'):
+            what = what[7:].strip()
         elif self.channel and self.nick:
             what = u'%s, %s' % (self.nick, what)
 
