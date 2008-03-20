@@ -123,7 +123,8 @@ class Bot(object):
             setattr(self, key, getattr(other, key))
 
         self.reason = None
-
+        self.plugins._bot = self
+        
         for plugin in self.plugins:
             self.plugins.load(plugin.name)
 
@@ -204,3 +205,10 @@ class Bot(object):
 
     def open_state(self, name, mode='r'):
         return open('state/' + name, mode)
+    def read_state(self, name):
+        for line in self.open_state(name):
+            yield line.strip().decode('utf-8').split(u'\t')
+    def append_state(self, name, tuple):
+        file = self.open_state(name, 'a')
+        file.write(u'\t'.join(tuple).encode('utf-8') + '\n')
+        file.close()

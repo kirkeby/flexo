@@ -31,19 +31,20 @@ class Factoid(Plugin):
         return True
 
     def on_lookup(self, message, what):
-        all = [ l.strip().decode('utf-8').split('\t', 2)
-                for l in self.bot.open_state('factoids') ]
-        facts = [ (how, fact) for key, how, fact in all
+        facts = [ (how, fact)
+                  for key, how, fact in self.bot.read_state('factoids')
                   if key.lower() == what.lower() ]
 
         if not facts:
             reply = random.choice(huh).replace('%s', what)
+
         else:
             how, reply = random.choice(facts)
             if not reply.startswith(u'<'):
                 reply = u'Jeg mener helt bestemt at %s %s %s' \
                         % (what, how, reply)
             reply = reply.replace('%s', message.nick)
+
         message.reply(reply)
         
     def on_define(self, message, what):
@@ -55,17 +56,15 @@ class Factoid(Plugin):
 
         thing, how, text = m.groups()
         thing = thing.replace('\t', ' ')
-        
-        line = u'%s\t%s\t%s\n' % (thing, how, text)
-        self.bot.open_state('factoids', 'a').write(line.encode('utf-8'))
+        self.bot.append_state('factoids', (thing, how, text))
 
         message.reply(random.choice(got_its))
 
     def on_list(self, message, prefix):
-        all = [ l.strip().decode('utf-8').split('\t', 1)
-                for l in self.bot.open_state('factoids') ]
+        all = [ key for key, how, fact in self.bot.read_state('factoids') ]
+
         facts = {}
-        for key, fact in all:
+        for key in all:
             if key.lower() in facts:
                 continue
             if key.lower().startswith(prefix):

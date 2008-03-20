@@ -13,7 +13,7 @@ class GreetUser(Plugin):
 
         if greet.startswith(u'<action>'):
             greet = u'\x01ACTION %s\x01' % greet[8:].strip()
-        self.bot.send(u'PRIVMSG %s :%s' % (message.channel, greet))
+        self.bot.send(u'PRIVMSG %s :%s' % (message.channel.name, greet))
 
     def on_bang_newgreet(self, message, rest):
         if not ' ' in rest:
