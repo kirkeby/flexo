@@ -41,7 +41,14 @@ def run_bot(context, bot_factory):
 
 def run_console(context):
     while True:
-        interact(local=context)
+        ctx = context.copy()
+        try:
+            source = open('state/repl.py').read()
+            code = compile(source, 'repl.py', 'exec')
+            eval(code, ctx)
+        except:
+            log.exception('Executing reply.py')
+        interact(local=ctx)
 
 def main(opts):
     def bot_factory():

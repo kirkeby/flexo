@@ -4,4 +4,3 @@
 \.py[co]$
 \.egg-info
 \.log
-state
