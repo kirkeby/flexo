@@ -43,28 +43,33 @@ class Channels(Plugin):
         if message.channel and message.command == 'MODE':
             name, mode, who = message.rest
             who = who.split()
-
-            if mode == '-o':
-                for someone in who:
-                    if someone in message.channel.opers:
-                        message.channel.opers.remove(someone)
-            elif mode == '+o':
-                for someone in who:
-                    message.channel.opers.append(someone)
+            self.on_mode(message.channel, mode, who)
 
         elif message.command == '353':
             name = message.rest[2]
             channel = self.get(name)
+            who = message.tail.split()
+            self.on_chanlist(channel, who)
 
-            for user in message.tail.split():
-                if user[0] == '@':
-                    user = user[1:]
-                    if not user in channel.opers:
-                        channel.opers.append(user)
-                if user[0] == '+':
-                    user = user[1:]
-                if not user in channel.users:
-                    channel.users.append(user)
+    def on_mode(self, channel, mode, who):
+        if mode == '-o':
+            for someone in who:
+                if someone in message.channel.opers:
+                    message.channel.opers.remove(someone)
+        elif mode == '+o':
+            for someone in who:
+                message.channel.opers.append(someone)
+
+    def on_chanlist(self, channel, who):
+        for user in who:
+            if user[0] == '@':
+                user = user[1:]
+                if not user in channel.opers:
+                    channel.opers.append(user)
+            if user[0] == '+':
+                user = user[1:]
+            if not user in channel.users:
+                channel.users.append(user)
 
     def on_join(self, name, nick):
         channel = self.get(name)
