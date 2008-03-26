@@ -60,7 +60,7 @@ class Praiser(Plugin):
 
     def _on_newpraise(self, message, rest):
         if not '%s' in rest:
-            message.reply(u'Halllo. Der skal være %%s i en %s!' % self.what)
+            message.reply(u'Hallo. Der skal være %%s i en %s!' % self.what)
         else:
             file = self.bot.open_state(self.path, 'a')
             file.write(rest.encode('utf-8') + '\n')
@@ -84,9 +84,7 @@ class Larter(Praiser):
 
 class UltraLarter(Praiser):
     def __init__(self, bot):
-        self.bot = bot
-        self.what = 'ultralart'
-        self.path = 'ultralarts'
+        Praiser.__init__(self, bot, 'ultralart', 'ultralarts')
 
     def _on_self_praise(self, message):
         praiser = message.nick
