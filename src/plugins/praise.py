@@ -74,14 +74,30 @@ class Larter(Praiser):
         self.path = 'larts'
 
     def on_self_praise(self, message):
+        praiser = message.nick
+        where = message.channel.name
         message.reply(u'<action> losser %s så hårdt i bollerne at '
                              u'han ryger ud af %s' % (praiser, where))
         self.bot.send(u'KICK %s %s :Så kan du måske lære det!'
-                      % (message.channel.name, message.nick))
+                      % (where, praiser))
+
+class UltraLarter(Praiser):
+    def __init__(self, bot):
+        self.bot = bot
+        self.what = 'ultralart'
+        self.path = 'ultralarts'
+
+    def on_self_praise(self, message):
+        praiser = message.nick
+        where = message.channel.name
+        action = u'<action> klynger %s op med en død rottes hale' % praiser
+        message.reply(action)
+        self.bot.send(u'KICK %s %s :Så kan du måske lære det!'
+                      % (where, praiser))
 
 class MetaPlugin(Plugin):
     def __init__(self, bot):
-        self.plugins = Praiser(bot), Larter(bot)
+        self.plugins = Praiser(bot), Larter(bot), UltraLarter(bot)
     def handle(self, message):
         for plugin in self.plugins:
             if plugin.handle(message):
