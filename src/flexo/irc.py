@@ -47,6 +47,10 @@ class Plugins(object):
 
         return plugin
 
+    def add(self, plugin):
+        self._names.append(plugin.name)
+        self._plugins[plugin.name] = plugin
+
     def load(self, name):
         replacement = self.imp(name)
         if self._plugins.has_key(name):
@@ -132,6 +136,7 @@ class Bot(object):
         plugins = list(self.plugins)
         self.plugins = Plugins(self)
         for plugin in plugins:
+            self.plugins.add(plugin)
             self.plugins.load(plugin.name)
 
     def connect(self):
