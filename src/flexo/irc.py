@@ -53,6 +53,10 @@ class Plugins(object):
             self._names.append(name)
         self._plugins[name] = replacement
 
+    def unload(self, name):
+        self._names.remove(name)
+        del self._plugins[name]
+
 class Bot(object):
     __slots__ = ['server', 'server_name', 'address', 'nick', 'name', 'usermode',
                  'in_encodings', 'out_encoding', 'plugins', 'reason',
@@ -125,7 +129,9 @@ class Bot(object):
 
         self.reason = None
 
-        for plugin in self.plugins:
+        plugins = list(self.plugins)
+        self.plugins = Plugins(self)
+        for plugin in plugins:
             self.plugins.load(plugin.name)
 
     def connect(self):
