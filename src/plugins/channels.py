@@ -59,7 +59,11 @@ class Channels(Plugin):
     def on_part(self, message):
         message.channel.on_part(message.nick)
     def on_kick(self, message):
-        message.channel.on_part(message.nick)
+        if message.target == self.bot.nick:
+            self.bot.send(u'PRIVMSG %s :Grrr. . .' % message.nick)
+            del self.channels[message.channel.name]
+        else:
+            message.channel.on_part(message.target)
     def on_quit(self, message):
         message.channel.on_part(message.nick)
 
