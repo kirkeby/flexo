@@ -24,7 +24,7 @@ def random_element(iter):
 
     it = None
     for i, e in enumerate(iter):
-        if random.uniform(0, i) < 1:
+        if random.uniform(0, i + 1) < 1:
             it = e
 
     return it

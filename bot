@@ -53,7 +53,10 @@ def run_console(context):
 def main(opts):
     def bot_factory():
         irc = load_flexo()
-        return irc.Bot((opts.hostname, opts.port))
+        bot = irc.Bot((opts.hostname, opts.port))
+        bot.nick = opts.nick
+        bot.name = opts.name
+        return bot
 
     context = {}
 
@@ -88,6 +91,8 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('-H', '--hostname', default='localhost')
     parser.add_option('-P', '--port', type='int', default=6667)
+    parser.add_option('-n', '--nick', default='flexo')
+    parser.add_option('-N', '--name', default='Flexo')
     opts, args = parser.parse_args()
 
     if args:
