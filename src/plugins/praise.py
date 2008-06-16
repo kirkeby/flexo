@@ -12,6 +12,8 @@ specials = {
     'mig': lambda nick: nick,
 }
 
+is_self_re = re.compile(r'\bflexo\b|\bbender\b', re.I)
+
 def replace_pronouns(text, who):
     start = 0
     while True:
@@ -46,10 +48,13 @@ class Praiser(Plugin):
         setattr(self, 'on_bang_' + what, self._on_praise)
         setattr(self, 'on_bang_new' + what, self._on_newpraise)
 
+    def _is_self(self, rest):
+        return rest.lower() == self.bot.nick.lower()
+
     def _on_praise(self, message, rest):
         praiser = message.nick
 
-        if rest.lower() == self.bot.nick.lower():
+        if self._is_self(rest):
             self._on_self_praise(message)
             return True
 
@@ -74,6 +79,9 @@ class Larter(Praiser):
     def __init__(self, bot):
         Praiser.__init__(self, bot, 'lart', 'larts')
 
+    def _is_self(self, rest):
+        return bool(is_self_re.match(rest))
+
     def _on_self_praise(self, message):
         praiser = message.nick
         where = message.channel.name
@@ -85,6 +93,9 @@ class Larter(Praiser):
 class UltraLarter(Praiser):
     def __init__(self, bot):
         Praiser.__init__(self, bot, 'ultralart', 'ultralarts')
+
+    def _is_self(self, rest):
+        return bool(is_self_re.match(rest))
 
     def _on_self_praise(self, message):
         praiser = message.nick
