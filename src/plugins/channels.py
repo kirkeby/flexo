@@ -65,7 +65,9 @@ class Channels(Plugin):
         else:
             message.channel.on_part(message.target)
     def on_quit(self, message):
-        message.channel.on_part(message.nick)
+        for channel in self.channels.values():
+            if message.nick in channel.users:
+                channel.on_part(message.nick)
 
     def get(self, name):
         return self.channels.get(name)
