@@ -12,7 +12,7 @@ specials = {
     'mig': lambda nick: nick,
 }
 
-is_self_re = re.compile(r'\bflexo\b|\bbender\b', re.I)
+is_self_re = re.compile(r'\bflexo\b', re.I)
 
 def replace_pronouns(text, who):
     start = 0

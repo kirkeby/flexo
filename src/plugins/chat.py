@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+import re
 from flexo.plugin import Plugin
 
 class Chatter(Plugin):
@@ -7,10 +8,16 @@ class Chatter(Plugin):
         what = message.says
 
         if what.startswith(self.bot.nick.lower() + ', '):
-            message.reply(u'NOBODY CARES!')
-            return True
+            pass
         elif what.startswith(self.bot.nick.lower() + ': '):
+            pass
+        else:
+            return False
+
+        if re.search(r'\bbender\b', what, re.I):
+            message.reply(u'Tell him I hate him!')
+        else:
             message.reply(u'NOBODY CARES!')
-            return True
+        return True
 
 plugin = Chatter
