@@ -1,0 +1,2 @@
+<nick> .*\bbender\b    -> Tell him I hate him!
+<nick> .*              -> NOBODY CARES!
