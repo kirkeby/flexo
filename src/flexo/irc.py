@@ -7,6 +7,7 @@ import time
 import socket
 import logging
 import imp
+import errno
 
 from flexo.plugin import Plugin
 from flexo.protocol import parse_message
@@ -17,6 +18,10 @@ log = logging.getLogger('flexo.irc')
 reconnect_delay = 67
 timeout = 180
 max_timeouts = 2
+
+def is_timeout(error):
+    return isinstance(error, socket.timeout) \
+           or error.args[0] == errno.EINTR
 
 class Plugins(object):
     __slots__ = '_names', '_plugins', '_bot'
@@ -166,7 +171,11 @@ class Bot(object):
             try:
                 line = self.server.readline()
                 self.timeouts = 0
-            except socket.timeout:
+
+            except socket.error, error:
+                if not is_timeout(error):
+                    raise
+                
                 self.timeouts = self.timeouts + 1
                 if self.timeouts == max_timeouts:
                     log.warning('Connection timed out')
